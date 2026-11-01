@@ -1,0 +1,7 @@
+{
+  "name": "gym-defteri",
+  "private": true,
+  "type": "module",
+  "description": "Kişisel antrenman defteri — statik sayfa + Vercel API + Upstash Redis",
+  "engines": { "node": ">=18" }
+}

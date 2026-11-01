@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#1d4ed8">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Gym">
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="icon" type="image/png" href="/icon-192.png">
+<title>Recomp Antrenman Defteri</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700;800&family=IBM+Plex+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  /* Layout: tek sütun, telefon öncelikli antrenman defteri; gün sekmeleri + hareket kartları + altta sabit dinlenme sayacı */
+  --bg: #eef1f4;
+  --surface: #ffffff;
+  --ink: #15191f;
+  --muted: #5d6673;
+  --line: #d6dce3;
+  --accent: #1d4ed8;
+  --accent-ink: #ffffff;
+  --accent-soft: #e3eafc;
+  --good: #11804a;
+  --good-soft: #def3e7;
+  --warn: #b45309;
+  --warn-soft: #fdf0dc;
+  --sil: #dfe4ea;
+  --mus0: #c6ced9;
+  --mus2: #9fb7ef;
+  --font-display: "Barlow Condensed", "Arial Narrow", system-ui, sans-serif;
+  --font-body: "IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  color-scheme: light;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0f1216; --surface: #181c22; --ink: #e9edf2; --muted: #9aa4b1; --line: #2a313a;
+    --accent: #6d97ff; --accent-ink: #0b1020; --accent-soft: #1c2840;
+    --good: #4fd08d; --good-soft: #163325; --warn: #f0a54a; --warn-soft: #3a2a14;
+    --sil: #232932; --mus0: #343c48; --mus2: #3a5596;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0f1216; --surface: #181c22; --ink: #e9edf2; --muted: #9aa4b1; --line: #2a313a;
+  --accent: #6d97ff; --accent-ink: #0b1020; --accent-soft: #1c2840;
+  --good: #4fd08d; --good-soft: #163325; --warn: #f0a54a; --warn-soft: #3a2a14;
+  --sil: #232932; --mus0: #343c48; --mus2: #3a5596;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { background: var(--bg); color: var(--ink); font-family: var(--font-body); font-size: 15px; line-height: 1.45; padding-bottom: 96px; }
+.wrap { max-width: 640px; margin: 0 auto; padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) 16px max(16px, env(safe-area-inset-left)); display: grid; gap: 16px; }
+h1, h2, h3 { font-family: var(--font-display); text-wrap: balance; margin: 0; letter-spacing: .01em; }
+h1 { font-size: 34px; line-height: 1; text-transform: uppercase; }
+h2 { font-size: 24px; text-transform: uppercase; }
+h3 { font-size: 21px; line-height: 1.1; }
+.sub { color: var(--muted); font-size: 14px; margin: 4px 0 0; }
+.num { font-variant-numeric: tabular-nums; }
+
+.week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+.wd { background: var(--surface); border: 1px solid var(--line); border-radius: 8px; padding: 6px 2px; text-align: center; font-size: 11px; color: var(--muted); }
+.wd b { display: block; font-family: var(--font-display); font-size: 15px; color: var(--ink); }
+.wd.train b { color: var(--accent); }
+.wd.today { outline: 2px solid var(--accent); outline-offset: -1px; }
+
+.tabs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; }
+.tab { flex: 0 0 auto; font: 600 14px var(--font-body); border: 1px solid var(--line); background: var(--surface); color: var(--ink); padding: 8px 12px; border-radius: 999px; cursor: pointer; }
+.tab[aria-selected="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.tab:focus-visible, button:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+.dayhead { display: grid; gap: 4px; }
+.status { font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+.dot.on { background: var(--good); }
+
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: grid; gap: 10px; }
+.card.done { border-left: 4px solid var(--good); }
+.ex-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; }
+.ex-idx { font-family: var(--font-display); color: var(--muted); font-size: 15px; }
+.rx { display: flex; flex-wrap: wrap; gap: 6px; }
+.chip { font-size: 12px; font-weight: 600; padding: 3px 8px; border-radius: 6px; background: var(--accent-soft); color: var(--accent); }
+.chip.good { background: var(--good-soft); color: var(--good); }
+.chip.warn { background: var(--warn-soft); color: var(--warn); }
+.chip.plain { background: transparent; border: 1px solid var(--line); color: var(--muted); }
+.tip { font-size: 13px; color: var(--muted); margin: 0; }
+.last { font-size: 13px; margin: 0; }
+.last b { font-weight: 600; }
+
+.sets { display: grid; gap: 6px; }
+.setrow { display: grid; grid-template-columns: 44px 1fr 1fr; gap: 8px; align-items: center; }
+.setrow label { font-size: 12px; color: var(--muted); }
+.field { display: flex; align-items: center; border: 1px solid var(--line); border-radius: 8px; background: var(--bg); padding: 0 8px; }
+.field input { width: 100%; border: 0; background: transparent; color: var(--ink); font: 500 16px var(--font-body); padding: 9px 0; font-variant-numeric: tabular-nums; }
+.field input:focus { outline: none; }
+.field:focus-within { border-color: var(--accent); }
+.field span { font-size: 12px; color: var(--muted); }
+
+.actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.btn { font: 600 14px var(--font-body); border-radius: 8px; padding: 9px 14px; cursor: pointer; border: 1px solid var(--line); background: var(--surface); color: var(--ink); }
+.btn.primary { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+.btn.small { padding: 6px 10px; font-size: 13px; white-space: nowrap; flex: 0 0 auto; }
+.btn:disabled { opacity: .6; cursor: default; }
+.msg { font-size: 13px; color: var(--good); align-self: center; }
+.msg.err { color: var(--warn); }
+
+.hist { display: grid; gap: 4px; font-size: 13px; border-top: 1px dashed var(--line); padding-top: 8px; }
+.hist .row { display: flex; gap: 10px; }
+.hist time { color: var(--muted); min-width: 52px; }
+
+.note { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: grid; gap: 8px; }
+.note ul { margin: 0; padding-left: 18px; display: grid; gap: 6px; }
+.note p { margin: 0; }
+
+table { width: 100%; border-collapse: collapse; font-size: 14px; }
+th, td { text-align: left; padding: 8px 6px; border-bottom: 1px solid var(--line); }
+th { font-size: 12px; color: var(--muted); font-weight: 600; }
+.formgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; }
+.formgrid label { display: grid; gap: 4px; font-size: 12px; color: var(--muted); }
+
+.timer { position: fixed; left: 0; right: 0; bottom: 0; background: var(--ink); color: var(--bg); padding: 12px 16px max(12px, env(safe-area-inset-bottom)); display: none; justify-content: space-between; align-items: center; gap: 12px; z-index: 5; }
+.timer.on { display: flex; }
+.timer .t { font-family: var(--font-display); font-size: 30px; font-variant-numeric: tabular-nums; }
+.timer .l { font-size: 13px; opacity: .8; }
+.timer button { background: transparent; color: var(--bg); border: 1px solid currentColor; border-radius: 8px; padding: 6px 10px; font: 600 13px var(--font-body); cursor: pointer; }
+.timer.end { background: var(--good); }
+.ex-grid { display: grid; grid-template-columns: 1fr 112px; gap: 10px; align-items: start; }
+.ex-grid > div { display: grid; gap: 8px; }
+.body-map { width: 100%; height: auto; display: block; }
+.body-map text { font: 600 9px var(--font-body); fill: var(--muted); letter-spacing: .08em; }
+.map-legend { display: flex; gap: 10px; font-size: 11px; color: var(--muted); }
+.map-legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; vertical-align: -1px; margin-right: 4px; }
+.hero { background: var(--surface); border: 1px solid var(--line); border-radius: 12px; padding: 14px; display: grid; grid-template-columns: 1fr 150px; gap: 12px; align-items: center; }
+.hero .stats { display: grid; gap: 10px; }
+.ring { width: 76px; height: 76px; }
+.ring-wrap { display: flex; align-items: center; gap: 10px; }
+.big { font-family: var(--font-display); font-size: 30px; line-height: 1; font-variant-numeric: tabular-nums; }
+.lbl { font-size: 12px; color: var(--muted); }
+.video { font-size: 13px; color: var(--accent); font-weight: 600; text-decoration: none; }
+.video:hover { text-decoration: underline; }
+.chart { display: grid; gap: 4px; }
+.chart svg { width: 100%; height: auto; display: block; touch-action: pan-y; }
+.chart .axis { font: 500 11px var(--font-body); fill: var(--muted); font-variant-numeric: tabular-nums; }
+.chart .grid { stroke: var(--line); stroke-width: 1; }
+.chart .ln { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+.chart .ar { fill: var(--accent); opacity: .12; }
+.chart .pt { fill: var(--accent); stroke: var(--surface); stroke-width: 2; }
+.chart .pt.end { r: 5; }
+.chart .hit { fill: transparent; cursor: pointer; }
+.chart .hit:hover + .pt, .chart .hit.on + .pt { r: 6; }
+.tipline { font-size: 12px; color: var(--muted); min-height: 18px; font-variant-numeric: tabular-nums; }
+.tipline b { color: var(--ink); }
+.kpis { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.kpi { background: var(--bg); border-radius: 8px; padding: 8px 10px; display: grid; gap: 2px; }
+.kpi .big { font-size: 22px; }
+@media (max-width: 380px) { .hero { grid-template-columns: 1fr 120px; } .ex-grid { grid-template-columns: 1fr 96px; } }
+@media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Recomp Defteri</h1>
+    <p class="sub">Üst/Alt bölünmüş program · haftada 4 gün · yağ yakarken kas kazanma</p>
+  </header>
+
+  <section class="week" id="week" aria-label="Haftalık plan"></section>
+
+  <nav class="tabs" id="tabs" role="tablist"></nav>
+
+  <main id="view"></main>
+</div>
+
+<div class="timer" id="timer" role="status" aria-live="polite">
+  <div><div class="l" id="timerLabel">Dinlenme</div><div class="t" id="timerT">0:00</div></div>
+  <div class="actions"><button type="button" id="timerAdd">+30 sn</button><button type="button" id="timerStop">Kapat</button></div>
+</div>
+
+<script>
+const PROGRAM = {
+  upperA: { name: "Üst Vücut A", short: "Üst A", day: "Pazar", focus: "Göğüs ve sırt ağırlıklı",
+    ex: [
+      { id: "wpushup", name: "Ağırlıklı Şınav", sets: 3, lo: 8, hi: 12, rest: 120, tip: "Plakayı kürek kemiklerinin arasına koy (birine koydurmak en kolayı) ya da ağırlık yeleği giy. Eller şınav tutacağı veya dumbbell üstünde, göğüs ellerin arasına kadar insin. Vücut tahta gibi düz, kalça düşmesin. Kg kısmına sırttaki ağırlığı yaz; 12 tekrarı rahat geçiyorsan plakayı büyüt." },
+      { id: "row_cs", name: "Göğüs Destekli Row", sets: 3, lo: 8, hi: 10, rest: 120, tip: "Makine yoksa incline bench'e yüzüstü yat, dumbbell ile çek. Dirsekleri kalçaya doğru çek, belden sallanma." },
+      { id: "incline_db", name: "Incline Dumbbell Press", sets: 3, lo: 8, hi: 12, rest: 90, tip: "Bench 30°. Dumbbell'lar göğüs hizasına kadar insin, üstte kilitleme." },
+      { id: "pulldown", name: "Lat Pulldown", sets: 3, lo: 10, hi: 12, rest: 90, tip: "Bar köprücük kemiğine insin, göğüs yukarıda. Çekerken dirsekleri aşağı ve arkaya düşün." },
+      { id: "lateral", name: "Dumbbell Lateral Raise", sets: 3, lo: 12, hi: 15, rest: 60, tip: "Hafif ağırlık, omuz hizasına kadar kaldır. Savurma yok, iniş 2 sn." },
+      { id: "ez_curl", name: "EZ Bar Curl", sets: 2, lo: 10, hi: 12, rest: 0, tip: "Pushdown ile süperset: curl'ü bitir, dinlenmeden pushdown'a geç." },
+      { id: "pushdown", name: "Kablo Triceps Pushdown", sets: 2, lo: 10, hi: 12, rest: 60, tip: "Dirsekler gövdeye yapışık, altta tam aç. Süperset bitince 60 sn dinlen." }
+    ] },
+  lowerA: { name: "Alt Vücut A", short: "Alt A", day: "Pazartesi", focus: "Squat ağırlıklı",
+    ex: [
+      { id: "squat", name: "Barbell Back Squat", sets: 3, lo: 6, hi: 8, rest: 180, tip: "En az paralel derinlik. Dizler ayak ucu yönünde, göğüs dik. 2 ısınma seti yap." },
+      { id: "rdl", name: "Romanian Deadlift", sets: 3, lo: 8, hi: 10, rest: 150, tip: "Kalçayı geriye it, dizler hafif bükük, bel düz. Hamstringde gerilme hissedince yukarı." },
+      { id: "leg_press", name: "Leg Press", sets: 3, lo: 10, hi: 12, rest: 120, tip: "Kalça platformdan kalkmasın. Dizleri üstte kilitleme." },
+      { id: "leg_curl", name: "Yatarak Leg Curl", sets: 3, lo: 10, hi: 12, rest: 90, tip: "Kalça bench'te sabit, iniş yavaş." },
+      { id: "calf_standing", name: "Ayakta Calf Raise", sets: 3, lo: 12, hi: 15, rest: 60, tip: "Altta 1 sn esneme, üstte 1 sn sıkma." },
+      { id: "cable_crunch", name: "Kablo Crunch", sets: 3, lo: 12, hi: 15, rest: 60, tip: "Kalçayla değil karınla bük, kaburgaları kalçaya yaklaştır." }
+    ] },
+  upperB: { name: "Üst Vücut B", short: "Üst B", day: "Çarşamba", focus: "Omuz ve dikey çekiş ağırlıklı",
+    ex: [
+      { id: "ohp", name: "Ayakta Overhead Press", sets: 3, lo: 6, hi: 8, rest: 150, tip: "Kalça ve karın sıkı, bel kavislenmesin. Bar başın üstünde bitsin." },
+      { id: "pullup", name: "Pull-up (gerekirse asistli)", sets: 3, lo: 6, hi: 10, rest: 150, tip: "6 tekrar çıkmıyorsa asistli makine ya da ağır pulldown. Kg'ye ek ağırlığı veya asist kilosunu yaz." },
+      { id: "db_bench", name: "Düz Dumbbell Bench Press", sets: 3, lo: 8, hi: 12, rest: 90, tip: "Altta derin esneme, dirsekler 45° açıda." },
+      { id: "cable_row", name: "Oturarak Kablo Row", sets: 3, lo: 10, hi: 12, rest: 90, tip: "Göğüs dik, kolu karına çek, kürek kemiklerini birleştir." },
+      { id: "rear_delt", name: "Reverse Pec Deck / Face Pull", sets: 3, lo: 12, hi: 15, rest: 60, tip: "Arka omuz için. Hafif kilo, kontrollü." },
+      { id: "incline_curl", name: "Incline Dumbbell Curl", sets: 2, lo: 10, hi: 12, rest: 0, tip: "Triceps extension ile süperset. Dirsek geride sabit." },
+      { id: "oh_tri", name: "Kablo Overhead Triceps Ext.", sets: 2, lo: 10, hi: 12, rest: 60, tip: "Kablo arkada, dirsekler yukarıda sabit, tam aç." }
+    ] },
+  lowerB: { name: "Alt Vücut B", short: "Alt B", day: "Perşembe", focus: "Kalça zinciri ve tek bacak",
+    ex: [
+      { id: "deadlift", name: "Deadlift (klasik veya trap bar)", sets: 3, lo: 5, hi: 6, rest: 180, tip: "Bar ayak ortasının üstünde, bel nötr. Her tekrarda barı yere bırak, zıplatma." },
+      { id: "bss", name: "Bulgarian Split Squat", sets: 3, lo: 8, hi: 10, rest: 120, tip: "Her bacak için ayrı tekrar. Kg'ye elindeki tek dumbbell'ın kilosunu yaz." },
+      { id: "leg_ext", name: "Leg Extension", sets: 3, lo: 12, hi: 15, rest: 60, tip: "Üstte 1 sn sık, iniş yavaş." },
+      { id: "seated_curl", name: "Oturarak Leg Curl", sets: 3, lo: 10, hi: 12, rest: 90, tip: "Hafif öne eğil, hamstring daha iyi esner." },
+      { id: "calf_seated", name: "Oturarak Calf Raise", sets: 3, lo: 15, hi: 20, rest: 60, tip: "Tam hareket açıklığı, altta duraksa." },
+      { id: "hanging_leg", name: "Asılı Diz / Bacak Kaldırma", sets: 3, lo: 10, hi: 15, rest: 60, tip: "Sallanmadan, kalçayı hafif yukarı kıvır. Kg boş kalabilir." }
+    ] }
+};
+const WEEK = [ // getDay(): 0=Pazar
+  { d: "Paz", key: "upperA" }, { d: "Pzt", key: "lowerA" }, { d: "Sal", key: null },
+  { d: "Çar", key: "upperB" }, { d: "Per", key: "lowerB" }, { d: "Cum", key: null }, { d: "Cmt", key: null }
+];
+const ORDER = ["upperA", "lowerA", "upperB", "lowerB"];
+const TAB_EXTRA = [{ key: "olcum", short: "Ölçüm" }, { key: "kurallar", short: "Kurallar" }];
+const PROFILE = { height: 180, startWeight: 74, startDate: "2026-11-01" };
+
+/* hangi kas: p = ana, s = yardımcı; en = video araması için */
+const META = {
+  bench:        { en: "barbell bench press proper form", p: ["chest"], s: ["delts", "triceps"] },
+  wpushup:      { en: "weighted push up plate on back form", p: ["chest"], s: ["delts", "triceps", "abs"] },
+  row_cs:       { en: "chest supported row form", p: ["lats", "traps"], s: ["rear_delt", "biceps"] },
+  incline_db:   { en: "incline dumbbell press form", p: ["chest"], s: ["delts", "triceps"] },
+  pulldown:     { en: "lat pulldown proper form", p: ["lats"], s: ["biceps", "rear_delt"] },
+  lateral:      { en: "dumbbell lateral raise form", p: ["delts"], s: ["traps"] },
+  ez_curl:      { en: "ez bar curl form", p: ["biceps"], s: ["forearms"] },
+  pushdown:     { en: "cable triceps pushdown form", p: ["triceps"], s: [] },
+  squat:        { en: "barbell back squat proper form", p: ["quads", "glutes"], s: ["lower_back", "hamstrings"] },
+  rdl:          { en: "romanian deadlift proper form", p: ["hamstrings", "glutes"], s: ["lower_back", "forearms"] },
+  leg_press:    { en: "leg press proper form", p: ["quads"], s: ["glutes"] },
+  leg_curl:     { en: "lying leg curl form", p: ["hamstrings"], s: ["calves"] },
+  calf_standing:{ en: "standing calf raise form", p: ["calves"], s: [] },
+  cable_crunch: { en: "cable crunch form", p: ["abs"], s: [] },
+  ohp:          { en: "standing overhead press form", p: ["delts"], s: ["triceps", "traps", "abs"] },
+  pullup:       { en: "pull up proper form", p: ["lats"], s: ["biceps", "rear_delt", "forearms"] },
+  db_bench:     { en: "dumbbell bench press form", p: ["chest"], s: ["delts", "triceps"] },
+  cable_row:    { en: "seated cable row form", p: ["lats", "traps"], s: ["rear_delt", "biceps"] },
+  rear_delt:    { en: "reverse pec deck rear delt form", p: ["rear_delt"], s: ["traps"] },
+  incline_curl: { en: "incline dumbbell curl form", p: ["biceps"], s: [] },
+  oh_tri:       { en: "cable overhead triceps extension form", p: ["triceps"], s: [] },
+  deadlift:     { en: "conventional deadlift proper form", p: ["hamstrings", "glutes", "lower_back"], s: ["traps", "quads", "forearms"] },
+  bss:          { en: "bulgarian split squat form", p: ["quads", "glutes"], s: ["hamstrings"] },
+  leg_ext:      { en: "leg extension form", p: ["quads"], s: [] },
+  seated_curl:  { en: "seated leg curl form", p: ["hamstrings"], s: [] },
+  calf_seated:  { en: "seated calf raise form", p: ["calves"], s: [] },
+  hanging_leg:  { en: "hanging leg raise form", p: ["abs"], s: ["forearms"] }
+};
+const MUSCLE_TR = { chest: "Göğüs", delts: "Ön/yan omuz", rear_delt: "Arka omuz", biceps: "Biceps", triceps: "Triceps", forearms: "Ön kol", abs: "Karın", lats: "Kanat (lat)", traps: "Trapez / üst sırt", lower_back: "Bel", glutes: "Kalça", quads: "Ön bacak", hamstrings: "Arka bacak", calves: "Baldır" };
+
+/* stilize ön/arka vücut haritası */
+function bodySVG(p, s) {
+  const f = k => p.includes(k) ? "var(--accent)" : (s.includes(k) ? "var(--mus2)" : "var(--mus0)");
+  const sil = c => `<circle cx="${c}" cy="14" r="9"/><rect x="${c - 4}" y="21" width="8" height="9"/>
+    <rect x="${c - 18}" y="28" width="36" height="66" rx="12"/><rect x="${c - 15}" y="84" width="30" height="22" rx="8"/>
+    <rect x="${c - 30}" y="31" width="10" height="60" rx="5"/><rect x="${c + 20}" y="31" width="10" height="60" rx="5"/>
+    <circle cx="${c - 25}" cy="95" r="4"/><circle cx="${c + 25}" cy="95" r="4"/>
+    <rect x="${c - 14}" y="100" width="13" height="88" rx="6"/><rect x="${c + 1}" y="100" width="13" height="88" rx="6"/>`;
+  const pair = (k, c, dx, cy, rx, ry) => `<ellipse fill="${f(k)}" cx="${c - dx}" cy="${cy}" rx="${rx}" ry="${ry}"/><ellipse fill="${f(k)}" cx="${c + dx}" cy="${cy}" rx="${rx}" ry="${ry}"/>`;
+  const F = 50, B = 160;
+  const front = pair("delts", F, 21, 37, 7, 7) + pair("chest", F, 8, 45, 9, 7) + pair("biceps", F, 25, 55, 4.5, 9) +
+    pair("forearms", F, 25, 77, 4, 10) + `<rect fill="${f("abs")}" x="${F - 7}" y="55" width="14" height="33" rx="4"/>` + pair("quads", F, 7.5, 128, 6, 21);
+  const back = `<ellipse fill="${f("traps")}" cx="${B}" cy="35" rx="12" ry="7"/>` + pair("rear_delt", B, 21, 37, 7, 7) +
+    pair("triceps", B, 25, 56, 4.5, 9) + pair("forearms", B, 25, 77, 4, 10) + pair("lats", B, 10, 59, 7, 14) +
+    `<rect fill="${f("lower_back")}" x="${B - 5}" y="72" width="10" height="16" rx="3"/>` + pair("glutes", B, 7, 97, 7.5, 8) +
+    pair("hamstrings", B, 7.5, 128, 6, 18) + pair("calves", B, 7.5, 164, 5, 12);
+  const names = p.concat(s).map(k => MUSCLE_TR[k]).join(", ");
+  return `<svg class="body-map" viewBox="0 0 210 202" role="img" aria-label="Çalışan kaslar: ${esc(names) || "—"}">
+    <g fill="var(--sil)">${sil(F)}${sil(B)}</g>${front}${back}
+    <text x="${F}" y="200" text-anchor="middle">ÖN</text><text x="${B}" y="200" text-anchor="middle">ARKA</text></svg>`;
+}
+
+/* seans başına tahmini 1RM (Epley); kilosuz harekette toplam tekrar */
+function sessionScore(sets) {
+  const valid = sets.filter(s => Number(s.reps) > 0);
+  const withKg = valid.filter(s => Number(s.kg) > 0);
+  if (withKg.length) {
+    let best = 0, bestSet = null;
+    withKg.forEach(s => { const e = Number(s.kg) * (1 + Number(s.reps) / 30); if (e > best) { best = e; bestSet = s; } });
+    return { v: Math.round(best * 10) / 10, unit: "kg", kind: "Tahmini 1 tekrar maks.", best: bestSet };
+  }
+  return { v: valid.reduce((a, s) => a + Number(s.reps), 0), unit: "tekrar", kind: "Toplam tekrar", best: null };
+}
+
+let chartSeq = 0;
+function lineChart(points, unit, title) {
+  // points: [{date, v, note}] tarih sıralı
+  if (!points.length) return "";
+  const id = "ch" + (++chartSeq);
+  const W = 360, H = 170, L = 36, R = 12, T = 18, Bm = 24;
+  const vals = points.map(p => p.v);
+  let lo = Math.min(...vals), hi = Math.max(...vals);
+  if (hi - lo < 1) { lo -= 1; hi += 1; }
+  const padv = (hi - lo) * 0.15; lo -= padv; hi += padv;
+  const x = i => points.length === 1 ? (L + (W - L - R) / 2) : L + i * (W - L - R) / (points.length - 1);
+  const y = v => T + (hi - v) * (H - T - Bm) / (hi - lo);
+  const ticks = [lo + (hi - lo) * 0.1, (lo + hi) / 2, hi - (hi - lo) * 0.1];
+  const fmt = v => (Math.round(v * 10) / 10).toLocaleString("tr-TR");
+  const grid = ticks.map(t => `<line class="grid" x1="${L}" x2="${W - R}" y1="${y(t)}" y2="${y(t)}"/><text class="axis" x="${L - 6}" y="${y(t) + 3}" text-anchor="end">${fmt(t)}</text>`).join("");
+  const path = points.map((p, i) => (i ? "L" : "M") + x(i).toFixed(1) + " " + y(p.v).toFixed(1)).join(" ");
+  const area = points.length > 1 ? `<path class="ar" d="${path} L${x(points.length - 1)} ${H - Bm} L${x(0)} ${H - Bm} Z"/>` : "";
+  const step = Math.max(1, Math.ceil(points.length / 6));
+  const xl = points.map((p, i) => (i % step === 0 || i === points.length - 1) ? `<text class="axis" x="${x(i)}" y="${H - 8}" text-anchor="middle">${fmtDate(p.date)}</text>` : "").join("");
+  const colW = points.length === 1 ? 60 : (W - L - R) / (points.length - 1);
+  const marks = points.map((p, i) => `<rect class="hit" x="${x(i) - colW / 2}" y="${T}" width="${colW}" height="${H - T - Bm}" data-chart="${id}" data-tip="${esc(fmtDate(p.date) + " · " + fmt(p.v) + " " + unit + (p.note ? " · " + p.note : ""))}"/><circle class="pt ${i === points.length - 1 ? "end" : ""}" cx="${x(i)}" cy="${y(p.v)}" r="${i === points.length - 1 ? 5 : 4}"/>`).join("");
+  const lastP = points[points.length - 1];
+  const endLbl = `<text class="axis" x="${Math.min(x(points.length - 1), W - R - 4)}" y="${y(lastP.v) - 10}" text-anchor="${points.length === 1 ? "middle" : "end"}" style="fill:var(--ink);font-weight:600">${fmt(lastP.v)} ${unit}</text>`;
+  const first = points[0];
+  const delta = points.length > 1 ? lastP.v - first.v : null;
+  const deltaTxt = delta == null ? "Tek kayıt var, grafik ikinci kayıttan sonra çizgiye dönecek." : `İlk kayda göre: <b>${delta >= 0 ? "+" : ""}${fmt(delta)} ${unit}</b>`;
+  return `<div class="chart"><div class="lbl">${esc(title)}</div>
+    <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(title)}">${grid}${area}<path class="ln" d="${path}"/>${marks}${endLbl}${xl}</svg>
+    <div class="tipline" id="${id}">${deltaTxt}</div></div>`;
+}
+
+const pad = n => String(n).padStart(2, "0");
+const todayStr = () => { const d = new Date(); return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); };
+const fmtDate = s => { const [y, m, d] = s.split("-"); return d + "." + m; };
+const fmtRest = s => s >= 60 ? (Math.floor(s / 60) + (s % 60 ? ":" + pad(s % 60) : "") + " dk") : s + " sn";
+const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+
+let logs = [];      // {id,date,dayKey,exId,exName,sets:[{kg,reps}],ts}
+let meas = [];      // {id,date,weight,waist,note}
+let online = false, loadNote = "Kayıtlar yükleniyor…";
+let current = WEEK[new Date().getDay()].key || nextTrainingKey();
+const openHist = new Set();
+const messages = {};
+
+function nextTrainingKey() {
+  const t = new Date().getDay();
+  for (let i = 1; i <= 7; i++) { const k = WEEK[(t + i) % 7].key; if (k) return k; }
+  return "upperA";
+}
+
+/* ---------- local fallback ---------- */
+function lsGet(k) { try { return JSON.parse(localStorage.getItem(k) || "[]"); } catch (e) { return []; } }
+function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch (e) {} }
+
+/* ---------- render ---------- */
+function renderWeek() {
+  const t = new Date().getDay();
+  document.getElementById("week").innerHTML = WEEK.map((w, i) =>
+    `<div class="wd ${w.key ? "train" : ""} ${i === t ? "today" : ""}">${w.d}<b>${w.key ? PROGRAM[w.key].short : "Off"}</b></div>`).join("");
+}
+function renderTabs() {
+  const tabs = ORDER.map(k => ({ key: k, short: PROGRAM[k].short })).concat(TAB_EXTRA);
+  document.getElementById("tabs").innerHTML = tabs.map(t =>
+    `<button type="button" class="tab" role="tab" id="tab-${t.key}" aria-selected="${t.key === current}" data-tab="${t.key}">${t.short}</button>`).join("");
+}
+function lastSessions(exId, n) {
+  return logs.filter(l => l.exId === exId).sort((a, b) => b.date.localeCompare(a.date)).slice(0, n);
+}
+function setsText(sets) { return sets.filter(s => s.kg !== "" || s.reps !== "").map(s => (s.kg === "" || s.kg == null ? "—" : s.kg) + "×" + (s.reps ?? "—")).join(", "); }
+
+function exCard(ex, i, dayKey) {
+  const today = todayStr();
+  const todays = logs.find(l => l.exId === ex.id && l.date === today);
+  const prev = lastSessions(ex.id, 6).filter(l => l.date !== today);
+  const last = prev[0];
+  let advice = "";
+  if (last && last.sets.length >= ex.sets && last.sets.slice(0, ex.sets).every(s => Number(s.reps) >= ex.hi)) advice = `<span class="chip good">Ağırlığı artır</span>`;
+  else if (last) advice = `<span class="chip plain">Aynı kiloda tekrar artır</span>`;
+  else advice = `<span class="chip warn">İlk kez: ağırlığı bul</span>`;
+  const rows = [];
+  for (let s = 0; s < ex.sets; s++) {
+    const src = todays ? todays.sets[s] : null;
+    const kg = src ? src.kg : (last && last.sets[s] ? last.sets[s].kg : "");
+    const reps = src ? src.reps : "";
+    rows.push(`<div class="setrow">
+      <label for="kg-${ex.id}-${s}">Set ${s + 1}</label>
+      <div class="field"><input id="kg-${ex.id}-${s}" inputmode="decimal" placeholder="kg" value="${esc(kg)}"><span>kg</span></div>
+      <div class="field"><input id="rp-${ex.id}-${s}" inputmode="numeric" placeholder="${ex.lo}–${ex.hi}" value="${esc(reps)}"><span>tekrar</span></div>
+    </div>`);
+  }
+  const m = messages[ex.id];
+  let hist = "";
+  if (openHist.has(ex.id)) {
+    const all = logs.filter(l => l.exId === ex.id).sort((a, b) => a.date.localeCompare(b.date)).slice(-20);
+    const pts = all.map(l => { const sc = sessionScore(l.sets); return { date: l.date, v: sc.v, unit: sc.unit, note: setsText(l.sets) }; }).filter(p => p.v > 0);
+    const unit = pts.length ? pts[pts.length - 1].unit : "kg";
+    const title = unit === "kg" ? "Güç gelişimi · en iyi setten tahmini 1 tekrar maksimum" : "Gelişim · seanstaki toplam tekrar";
+    hist = `<div class="hist">${pts.length ? lineChart(pts.filter(p => p.unit === unit), unit, title) : ""}
+      ${all.length ? all.slice().reverse().slice(0, 6).map(l => `<div class="row"><time class="num">${fmtDate(l.date)}</time><span class="num">${esc(setsText(l.sets))}</span></div>`).join("") : "<div class=\"row\">Henüz geçmiş kayıt yok. İlk kayıttan sonra burada grafik çıkacak.</div>"}</div>`;
+  }
+  const meta = META[ex.id] || { p: [], s: [], en: ex.name };
+  const yt = "https://www.youtube.com/results?search_query=" + encodeURIComponent(meta.en);
+  return `<article class="card ${todays ? "done" : ""}">
+    <div class="ex-grid">
+      <div>
+        <div class="ex-top">
+          <div><div class="ex-idx num">${pad(i + 1)}</div><h3>${esc(ex.name)}</h3></div>
+        </div>
+        <div class="rx"><span class="chip num">${ex.sets} × ${ex.lo}–${ex.hi}</span>${advice}</div>
+        <p class="tip"><b>Çalışan:</b> ${esc(meta.p.map(k => MUSCLE_TR[k]).join(", "))}${meta.s.length ? ` <span>(+ ${esc(meta.s.map(k => MUSCLE_TR[k]).join(", "))})</span>` : ""}</p>
+        <div class="actions">
+          ${ex.rest ? `<button type="button" class="btn small" data-rest="${ex.rest}" data-name="${esc(ex.name)}">⏱ ${fmtRest(ex.rest)}</button>` : `<span class="chip plain">süperset · dinlenmeden geç</span>`}
+          <a class="video" href="${yt}" target="_blank" rel="noopener">▶ Nasıl yapılır</a>
+        </div>
+      </div>
+      ${bodySVG(meta.p, meta.s)}
+    </div>
+    <p class="tip">${esc(ex.tip)}</p>
+    <p class="last">${last ? `Son seferki (<span class="num">${fmtDate(last.date)}</span>): <b class="num">${esc(setsText(last.sets))}</b>` : "Önceki kayıt yok."}</p>
+    <div class="sets">${rows.join("")}</div>
+    <div class="actions">
+      <button type="button" class="btn primary" data-save="${ex.id}" data-day="${dayKey}">${todays ? "Güncelle" : "Kaydet"}</button>
+      <button type="button" class="btn" data-hist="${ex.id}">${openHist.has(ex.id) ? "Geçmişi gizle" : "Geçmiş"}</button>
+      ${m ? `<span class="msg ${m.err ? "err" : ""}">${esc(m.text)}</span>` : ""}
+    </div>
+    ${hist}
+  </article>`;
+}
+
+function statusLine() {
+  return `<div class="status"><span class="dot ${online ? "on" : ""}"></span>${esc(online ? (lsGet("pending").length ? "Bazı kayıtlar gönderilmeyi bekliyor" : "Kayıtlar bulutta, her cihazdan görünür") : loadNote)}</div>`;
+}
+
+function renderDay(key) {
+  const p = PROGRAM[key];
+  const today = todayStr();
+  const doneCount = p.ex.filter(e => logs.some(l => l.exId === e.id && l.date === today)).length;
+  const isToday = WEEK[new Date().getDay()].key === key;
+  const prim = [...new Set(p.ex.flatMap(e => (META[e.id] || { p: [] }).p))];
+  const sec = [...new Set(p.ex.flatMap(e => (META[e.id] || { s: [] }).s))].filter(k => !prim.includes(k));
+  const totalSets = p.ex.reduce((a, e) => a + e.sets, 0);
+  const pct = doneCount / p.ex.length;
+  const C = 2 * Math.PI * 30;
+  const sessions = new Set(logs.filter(l => l.dayKey === key).map(l => l.date)).size;
+  return `<section class="dayhead">
+      <h2>${p.name} · ${p.day}</h2>
+      <p class="sub">${p.focus}. ${isToday ? "Bugünün antrenmanı." : ""}</p>
+      ${statusLine()}
+    </section>
+    <div class="hero">
+      <div class="stats">
+        <div class="ring-wrap">
+          <svg class="ring" viewBox="0 0 76 76" role="img" aria-label="Bugün ${doneCount} / ${p.ex.length} hareket kaydedildi">
+            <circle cx="38" cy="38" r="30" fill="none" stroke="var(--line)" stroke-width="8"/>
+            <circle cx="38" cy="38" r="30" fill="none" stroke="${pct === 1 ? "var(--good)" : "var(--accent)"}" stroke-width="8" stroke-linecap="round"
+              stroke-dasharray="${(C * pct).toFixed(1)} ${C.toFixed(1)}" transform="rotate(-90 38 38)"/>
+            <text x="38" y="43" text-anchor="middle" style="font:700 17px var(--font-display);fill:var(--ink)">${doneCount}/${p.ex.length}</text>
+          </svg>
+          <div><div class="lbl">Bugün kaydedilen hareket</div><div class="lbl">${pct === 1 ? "Antrenman tamam" : "Her hareketi bitirince Kaydet"}</div></div>
+        </div>
+        <div class="kpis" style="grid-template-columns:repeat(2,1fr)">
+          <div class="kpi"><span class="big">${totalSets}</span><span class="lbl">çalışma seti</span></div>
+          <div class="kpi"><span class="big">${sessions}</span><span class="lbl">bu gün yapılan seans</span></div>
+        </div>
+        <div class="map-legend"><span><i style="background:var(--accent)"></i>Ana kas</span><span><i style="background:var(--mus2)"></i>Yardımcı</span></div>
+      </div>
+      ${bodySVG(prim, sec)}
+    </div>
+    <div class="note"><p><b>Isınma:</b> 5 dk yürüyüş + hafif mobilite. İlk harekette 2 hafif ısınma seti.</p>
+    <p><b>Bitiş:</b> 10–15 dk eğimli yürüyüş (eğim 10–12, hız 5–5.5).</p></div>
+    ${p.ex.map((e, i) => exCard(e, i, key)).join("")}`;
+}
+
+function renderMeas() {
+  const rows = meas.slice().sort((a, b) => b.date.localeCompare(a.date));
+  const asc = rows.slice().reverse();
+  const wPts = asc.filter(r => Number(r.weight) > 0).map(r => ({ date: r.date, v: Number(r.weight) }));
+  const waPts = asc.filter(r => Number(r.waist) > 0).map(r => ({ date: r.date, v: Number(r.waist) }));
+  const curW = wPts.length ? wPts[wPts.length - 1].v : PROFILE.startWeight;
+  const prot = Math.round(curW * 1.8 / 5) * 5 + "–" + Math.round(curW * 2 / 5) * 5;
+  return `<section class="dayhead"><h2>Ölçümler</h2><p class="sub">Haftada bir, aynı gün, sabah aç karnına tartıl. Bel ölçüsünü göbek hizasından al. Recomp'ta tartı yavaş değişir, bel ölçüsü daha çok şey söyler.</p>${statusLine()}</section>
+  <div class="card">
+    <div class="kpis">
+      <div class="kpi"><span class="big">${String(curW).replace(".", ",")}</span><span class="lbl">kg · güncel</span></div>
+      <div class="kpi"><span class="big">${PROFILE.height}</span><span class="lbl">cm · boy</span></div>
+      <div class="kpi"><span class="big">${prot}</span><span class="lbl">g protein / gün</span></div>
+    </div>
+    <p class="tip">Kalori hedefi: günde yaklaşık 2.200–2.400 kcal (bakımın biraz altı). Bel ölçüsü düşüyor, ağırlıklar artıyorsa doğru yoldasın.</p>
+  </div>
+  ${wPts.length ? `<div class="card">${lineChart(wPts, "kg", "Vücut ağırlığı")}</div>` : ""}
+  ${waPts.length ? `<div class="card">${lineChart(waPts, "cm", "Bel çevresi")}</div>` : `<div class="note"><p><b>Bel ölçüsü eksik.</b> Mezura ile göbek hizasından ölçüp gir. Recomp'un en iyi göstergesi bu.</p></div>`}
+  <div class="card">
+    <div class="formgrid">
+      <label for="m-date">Tarih<div class="field"><input id="m-date" type="date" value="${todayStr()}"></div></label>
+      <label for="m-weight">Kilo<div class="field"><input id="m-weight" inputmode="decimal" placeholder="örn. 82.4"><span>kg</span></div></label>
+      <label for="m-waist">Bel<div class="field"><input id="m-waist" inputmode="decimal" placeholder="örn. 90"><span>cm</span></div></label>
+    </div>
+    <div class="actions"><button type="button" class="btn primary" id="m-save">Ölçümü kaydet</button>${messages.__meas ? `<span class="msg ${messages.__meas.err ? "err" : ""}">${esc(messages.__meas.text)}</span>` : ""}</div>
+  </div>
+  <div class="card" style="overflow-x:auto">
+    ${rows.length ? `<table><thead><tr><th>Tarih</th><th>Kilo</th><th>Bel</th></tr></thead><tbody>${rows.map(r => `<tr><td class="num">${fmtDate(r.date)}</td><td class="num">${esc(r.weight ?? "—")} kg</td><td class="num">${esc(r.waist ?? "—")} cm</td></tr>`).join("")}</tbody></table>` : `<p class="tip">Henüz ölçüm yok. İlk ölçümünü bu hafta gir, başlangıç noktası olsun.</p>`}
+  </div>`;
+}
+
+function renderRules() {
+  return `<section class="dayhead"><h2>Kurallar</h2><p class="sub">Programın işe yaraması için tekrar tekrar dönülecek sayfa.</p></section>
+  <div class="note"><h3>Çift progresyon</h3><ul>
+    <li>Her hareketin bir tekrar aralığı var (örn. 6–8).</li>
+    <li>Tüm setlerde aralığın üstüne ulaştığında bir sonraki seferde kiloyu artır: üst vücut +2.5 kg, alt vücut +5 kg, dumbbell'da bir sonraki kilo.</li>
+    <li>Kilo artınca tekrar düşer, tekrar aralığın altından yukarı çıkarsın. Kartın üstündeki yeşil etiket bunu sana söyler.</li>
+  </ul></div>
+  <div class="note"><h3>Efor</h3><ul>
+    <li>Her sette 1–2 tekrar daha yapabilecek gücün kalsın. Son sette 0–1 olabilir.</li>
+    <li>Form bozuluyorsa o tekrar sayılmaz.</li>
+    <li>6–8 haftada bir, ya da 2 hafta üst üste ilerleme durursa: 1 hafta deload (aynı kilolar, setler yarıya).</li>
+  </ul></div>
+  <div class="note"><h3>Beslenme ve günlük</h3><ul>
+    <li>Protein: vücut ağırlığının kg'si başına yaklaşık 1.8–2 g. Her öğünde bir protein kaynağı.</li>
+    <li>Kalori: bakım seviyesinin hafif altı (günde ~300–400 kcal eksik). Haftada ortalama 0.25–0.5 kg kayıp hedef.</li>
+    <li>Adım: günde 8–10 bin. Uyku: 7+ saat.</li>
+    <li>Mükemmel değil, istikrarlı: haftanın %80'i düzgün geçerse yeterli.</li>
+  </ul></div>`;
+}
+
+let renderedView = null;
+function render() {
+  renderTabs();
+  const v = document.getElementById("view");
+  // yazılmış ama kaydedilmemiş değerleri koru
+  const drafts = {};
+  if (renderedView === current) v.querySelectorAll("input[id]").forEach(i => { drafts[i.id] = i.value; });
+  const focusId = document.activeElement && document.activeElement.id;
+  v.style.display = "grid"; v.style.gap = "12px";
+  if (needLogin) { v.innerHTML = loginCard(); renderedView = "login"; return; }
+  if (PROGRAM[current]) v.innerHTML = renderDay(current);
+  else if (current === "olcum") v.innerHTML = renderMeas();
+  else v.innerHTML = renderRules();
+  Object.keys(drafts).forEach(id => { const el = document.getElementById(id); if (el) el.value = drafts[id]; });
+  if (focusId && renderedView === current) { const f = document.getElementById(focusId); if (f && f.tagName === "INPUT") f.focus(); }
+  renderedView = current;
+}
+
+/* ---------- save ---------- */
+async function saveEx(exId, dayKey) {
+  const ex = PROGRAM[dayKey].ex.find(e => e.id === exId);
+  const sets = [];
+  for (let s = 0; s < ex.sets; s++) {
+    const kg = document.getElementById(`kg-${exId}-${s}`).value.trim().replace(",", ".");
+    const reps = document.getElementById(`rp-${exId}-${s}`).value.trim();
+    sets.push({ kg: kg === "" ? "" : Number(kg), reps: reps === "" ? "" : Number(reps) });
+  }
+  if (!sets.some(s => s.reps !== "")) { messages[exId] = { text: "En az bir setin tekrarını gir.", err: true }; render(); return; }
+  const date = todayStr();
+  const doc = { date, dayKey, dayName: PROGRAM[dayKey].name, exId, exName: ex.name, target: `${ex.sets}x${ex.lo}-${ex.hi}`, sets, ts: Date.now() };
+  const id = date + "_" + exId;
+  logs = logs.filter(l => l.id !== id).concat([{ id, ...doc }]);
+  cacheSave();
+  messages[exId] = { text: "Kaydediliyor…" }; render();
+  messages[exId] = await persist("logs", id, doc);
+  render();
+}
+async function saveMeas() {
+  const date = document.getElementById("m-date").value || todayStr();
+  const w = document.getElementById("m-weight").value.trim().replace(",", ".");
+  const wa = document.getElementById("m-waist").value.trim().replace(",", ".");
+  if (!w && !wa) { messages.__meas = { text: "Kilo ya da bel gir.", err: true }; render(); return; }
+  const doc = { date, weight: w ? Number(w) : null, waist: wa ? Number(wa) : null, ts: Date.now() };
+  meas = meas.filter(m => m.id !== date).concat([{ id: date, ...doc }]);
+  cacheSave();
+  messages.__meas = await persist("measurements", date, doc);
+  render();
+}
+
+/* ---------- timer ---------- */
+let tEnd = 0, tInt = null;
+function startTimer(sec, name) {
+  tEnd = Date.now() + sec * 1000;
+  document.getElementById("timerLabel").textContent = "Dinlenme · " + name;
+  const el = document.getElementById("timer"); el.classList.add("on"); el.classList.remove("end");
+  clearInterval(tInt); tick(); tInt = setInterval(tick, 250);
+}
+function tick() {
+  const left = Math.max(0, Math.round((tEnd - Date.now()) / 1000));
+  document.getElementById("timerT").textContent = Math.floor(left / 60) + ":" + pad(left % 60);
+  if (left === 0) { document.getElementById("timer").classList.add("end"); document.getElementById("timerLabel").textContent = "Sıradaki set!"; clearInterval(tInt); try { navigator.vibrate && navigator.vibrate(300); } catch (e) {} }
+}
+document.getElementById("timerAdd").onclick = () => { if (tEnd < Date.now()) tEnd = Date.now(); tEnd += 30000; document.getElementById("timer").classList.remove("end"); clearInterval(tInt); tInt = setInterval(tick, 250); tick(); };
+document.getElementById("timerStop").onclick = () => { clearInterval(tInt); document.getElementById("timer").classList.remove("on"); };
+
+/* ---------- events ---------- */
+document.addEventListener("click", e => {
+  const t = e.target.closest("button"); if (!t) return;
+  if (t.dataset.tab) { current = t.dataset.tab; render(); window.scrollTo(0, 0); }
+  else if (t.dataset.save) saveEx(t.dataset.save, t.dataset.day);
+  else if (t.dataset.hist) { const id = t.dataset.hist; openHist.has(id) ? openHist.delete(id) : openHist.add(id); render(); }
+  else if (t.dataset.rest) startTimer(Number(t.dataset.rest), t.dataset.name);
+  else if (t.id === "m-save") saveMeas();
+});
+function showTip(r) {
+  const box = document.getElementById(r.dataset.chart); if (!box) return;
+  r.closest("svg").querySelectorAll(".hit.on").forEach(h => h.classList.remove("on"));
+  r.classList.add("on"); box.innerHTML = "<b>" + esc(r.dataset.tip) + "</b>";
+}
+document.addEventListener("pointerover", e => { const r = e.target.closest && e.target.closest(".hit"); if (r) showTip(r); });
+document.addEventListener("pointerdown", e => { const r = e.target.closest && e.target.closest(".hit"); if (r) showTip(r); });
+
+/* ---------- sunucu ---------- */
+function getKey() { try { return localStorage.getItem("gym_key") || ""; } catch (e) { return ""; } }
+function setKey(k) { try { localStorage.setItem("gym_key", k); } catch (e) {} }
+function cacheSave() { lsSet("cache_logs", logs); lsSet("cache_meas", meas); }
+async function api(method, query, body) {
+  const r = await fetch("/api/data" + (query || ""), {
+    method, headers: { "x-app-key": getKey(), ...(body ? { "Content-Type": "application/json" } : {}) },
+    body: body ? JSON.stringify(body) : undefined, cache: "no-store"
+  });
+  let j = {}; try { j = await r.json(); } catch (e) {}
+  if (!r.ok) { const err = new Error(j.error || ("HTTP " + r.status)); err.status = r.status; throw err; }
+  return j;
+}
+async function persist(c, id, doc) {
+  try { await api("POST", "", { c, id, doc }); online = true; return { text: "Kaydedildi ✓" }; }
+  catch (e) {
+    if (e.status === 401) { needLogin = true; }
+    const q = lsGet("pending").filter(x => !(x.c === c && x.id === id)); q.push({ c, id, doc }); lsSet("pending", q);
+    return { text: "İnternete ulaşılamadı, telefonda bekliyor. Bağlantı gelince gönderilecek.", err: true };
+  }
+}
+async function flushPending() {
+  const q = lsGet("pending"); if (!q.length) return;
+  const left = [];
+  for (const x of q) { try { await api("POST", "", x); } catch (e) { left.push(x); } }
+  lsSet("pending", left);
+}
+async function loadAll() {
+  loadNote = "Kayıtlar yükleniyor…"; render();
+  try {
+    await flushPending();
+    const j = await api("GET", "");
+    const pend = lsGet("pending");
+    const withPending = (arr, c) => { const p = pend.filter(x => x.c === c); const ids = new Set(p.map(x => x.id)); return arr.filter(a => !ids.has(a.id)).concat(p.map(x => ({ id: x.id, ...x.doc }))); };
+    logs = withPending(j.logs || [], "logs"); meas = withPending(j.measurements || [], "measurements");
+    cacheSave(); online = true; needLogin = false; loginErr = "";
+  } catch (e) {
+    online = false;
+    if (e.status === 401) { needLogin = true; loginErr = getKey() ? "Şifre yanlış, tekrar dene." : ""; }
+    else loadNote = e.status ? ("Sunucu hatası: " + e.message) : "Çevrimdışı. Son kaydedilen veriler gösteriliyor.";
+  }
+  render();
+}
+let needLogin = !getKey(), loginErr = "";
+function loginCard() {
+  return `<section class="dayhead"><h2>Giriş</h2><p class="sub">Defterin şifreli. Şifreyi bir kez gir, bu cihaz hatırlayacak.</p></section>
+  <form class="card" id="loginForm">
+    <label for="pw" class="lbl">Şifre</label>
+    <div class="field"><input id="pw" type="password" autocomplete="current-password" placeholder="Şifre"></div>
+    <div class="actions"><button type="submit" class="btn primary">Giriş yap</button>${loginErr ? `<span class="msg err">${esc(loginErr)}</span>` : ""}</div>
+  </form>`;
+}
+document.addEventListener("submit", e => {
+  if (e.target.id !== "loginForm") return;
+  e.preventDefault();
+  setKey(document.getElementById("pw").value.trim());
+  loadAll();
+});
+window.addEventListener("online", loadAll);
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && !needLogin) loadAll(); });
+
+/* ---------- boot ---------- */
+logs = lsGet("cache_logs"); meas = lsGet("cache_meas");
+renderWeek(); render();
+if (!needLogin) loadAll();
+</script>
+</body>
+</html>
