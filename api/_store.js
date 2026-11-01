@@ -2,8 +2,20 @@
 // Vercel, Upstash entegrasyonunu bağlayınca KV_REST_API_URL / KV_REST_API_TOKEN
 // (veya UPSTASH_REDIS_REST_URL / UPSTASH_REDIS_REST_TOKEN) değişkenlerini ekler.
 
-const URL_ = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL;
-const TOKEN = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN;
+// Bağlarken farklı bir önek (prefix) seçilmiş olabilir: *_REST_API_URL / *_REST_API_TOKEN çiftini bul.
+function findEnv() {
+  const env = process.env;
+  if (env.KV_REST_API_URL && env.KV_REST_API_TOKEN) return [env.KV_REST_API_URL, env.KV_REST_API_TOKEN];
+  if (env.UPSTASH_REDIS_REST_URL && env.UPSTASH_REDIS_REST_TOKEN) return [env.UPSTASH_REDIS_REST_URL, env.UPSTASH_REDIS_REST_TOKEN];
+  for (const k of Object.keys(env)) {
+    if (k.endsWith("_REST_API_URL")) {
+      const t = env[k.replace(/_URL$/, "_TOKEN")];
+      if (t) return [env[k], t];
+    }
+  }
+  return [undefined, undefined];
+}
+const [URL_, TOKEN] = findEnv();
 
 export const COLLECTIONS = ["logs", "measurements"];
 
