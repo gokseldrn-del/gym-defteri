@@ -1,14 +1,20 @@
-import { COLLECTIONS, storeReady, redis, readAll, authorized, fail } from "./_store.js";
+import { COLLECTIONS, storeReady, redis, readAll, authorized, passwordIsSet, fail } from "./_store.js";
 
 const ID_RE = /^[A-Za-z0-9_.:-]{1,120}$/;
 
 export default async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
-  if (!process.env.APP_PASSWORD) return fail(res, 500, "APP_PASSWORD ayarlanmamış. Vercel > Settings > Environment Variables.");
-  if (!storeReady()) return fail(res, 500, "Veritabanı bağlı değil. Vercel > Storage > Upstash Redis ekleyip projeye bağla.");
-  if (!authorized(req)) return fail(res, 401, "Şifre yanlış.");
+  // Şifresiz durum kontrolü: veritabanı bağlı mı, şifre belirlenmiş mi?
+  if (req.method === "GET" && req.query.ping) {
+    if (!storeReady()) return res.status(200).json({ store: false, passwordSet: false });
+    try { return res.status(200).json({ store: true, passwordSet: await passwordIsSet() }); }
+    catch (e) { return res.status(200).json({ store: false, passwordSet: false, error: e.message }); }
+  }
+  if (!storeReady()) return fail(res, 503, "Veritabanı bağlı değil. Vercel > Storage > Upstash Redis ekleyip projeye bağla.");
 
   try {
+    if (!(await authorized(req))) return fail(res, 401, "Şifre yanlış.");
+
     if (req.method === "GET") {
       const c = req.query.c;
       if (c) {

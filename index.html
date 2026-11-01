@@ -617,7 +617,7 @@ async function api(method, query, body) {
   return j;
 }
 async function persist(c, id, doc) {
-  if (LOCAL_ONLY) return { text: "Kaydedildi ✓" };
+  if (mode !== "cloud") return { text: "Kaydedildi ✓ (telefonda)" };
   try { await api("POST", "", { c, id, doc }); online = true; return { text: "Kaydedildi ✓" }; }
   catch (e) {
     if (e.status === 401) { needLogin = true; }
@@ -631,7 +631,7 @@ async function flushPending() {
   for (const x of q) { try { await api("POST", "", x); } catch (e) { left.push(x); } }
   lsSet("pending", left);
 }
-async function loadAll() {
+let loadAll = async function () {
   loadNote = "Kayıtlar yükleniyor…"; render();
   try {
     await flushPending();
@@ -647,32 +647,80 @@ async function loadAll() {
   }
   render();
 }
-// Şimdilik kayıtlar sadece bu telefonda (sunucu kurulumu sonra). true → false yapınca bulut senkronu açılır.
-const LOCAL_ONLY = true;
-let needLogin = LOCAL_ONLY ? false : !getKey(), loginErr = "";
+// mode: "checking" → sunucuya soruluyor, "local" → bulut yok, kayıt telefonda, "cloud" → bulut aktif
+let mode = "checking", passwordSet = true;
+let needLogin = false, loginErr = "";
+const LOCAL_ONLY_NOTE = "Kayıtlar bu telefonda tutuluyor";
 function loginCard() {
-  return `<section class="dayhead"><h2>Giriş</h2><p class="sub">Defterin şifreli. Şifreyi bir kez gir, bu cihaz hatırlayacak.</p></section>
+  const first = !passwordSet;
+  return `<section class="dayhead"><h2>${first ? "Şifre belirle" : "Giriş"}</h2><p class="sub">${first
+    ? "Bulut kaydı hazır. Kendine bir şifre belirle (en az 4 karakter). Bu şifre kalıcı olur, başka cihazdan girerken de bunu kullanacaksın. Telefondaki kayıtların buluta taşınacak."
+    : "Defterin şifreli. Şifreyi bir kez gir, bu cihaz hatırlayacak."}</p></section>
   <form class="card" id="loginForm">
-    <label for="pw" class="lbl">Şifre</label>
-    <div class="field"><input id="pw" type="password" autocomplete="current-password" placeholder="Şifre"></div>
-    <div class="actions"><button type="submit" class="btn primary">Giriş yap</button>${loginErr ? `<span class="msg err">${esc(loginErr)}</span>` : ""}</div>
-  </form>`;
+    <label for="pw" class="lbl">${first ? "Yeni şifre" : "Şifre"}</label>
+    <div class="field"><input id="pw" type="password" autocomplete="${first ? "new-password" : "current-password"}" placeholder="Şifre"></div>
+    <div class="actions"><button type="submit" class="btn primary">${first ? "Şifreyi belirle ve başla" : "Giriş yap"}</button>${loginErr ? `<span class="msg err">${esc(loginErr)}</span>` : ""}</div>
+  </form>
+  <div class="actions"><button type="button" class="btn" id="skipLogin">Şimdilik telefonda devam et</button></div>`;
+}
+// telefonda olup bulutta olmayan kayıtları gönder
+async function migrateLocal(cloudLogs, cloudMeas) {
+  const have = { logs: new Set(cloudLogs.map(x => x.id)), measurements: new Set(cloudMeas.map(x => x.id)) };
+  const local = { logs: lsGet("cache_logs"), measurements: lsGet("cache_meas") };
+  let moved = 0;
+  for (const c of ["logs", "measurements"]) {
+    for (const item of local[c]) {
+      if (!item || !item.id || have[c].has(item.id)) continue;
+      const { id, ...doc } = item;
+      try { await api("POST", "", { c, id, doc }); moved++; } catch (e) { if (e.status === 401) throw e; }
+    }
+  }
+  return moved;
+}
+const _loadAllCloud = loadAll;
+loadAll = async function () {
+  if (mode !== "cloud") return;
+  try {
+    const j0 = await api("GET", "");
+    const moved = await migrateLocal(j0.logs || [], j0.measurements || []);
+    if (moved) loadNote = moved + " kayıt telefondan buluta taşındı";
+  } catch (e) {
+    if (e.status === 401) { needLogin = true; loginErr = getKey() ? "Şifre yanlış, tekrar dene." : ""; render(); return; }
+  }
+  passwordSet = true;
+  return _loadAllCloud();
+};
+async function boot() {
+  try {
+    const r = await fetch("/api/data?ping=1", { cache: "no-store" });
+    const j = await r.json();
+    if (!j.store) throw new Error("no store");
+    mode = "cloud"; passwordSet = j.passwordSet;
+    if (!getKey()) { needLogin = true; render(); return; }
+    loadAll();
+  } catch (e) {
+    mode = "local"; loadNote = LOCAL_ONLY_NOTE; render();
+  }
 }
 document.addEventListener("submit", e => {
   if (e.target.id !== "loginForm") return;
   e.preventDefault();
-  setKey(document.getElementById("pw").value.trim());
-  loadAll();
+  const v = document.getElementById("pw").value.trim();
+  if (v.length < 4) { loginErr = "Şifre en az 4 karakter olmalı."; render(); return; }
+  setKey(v); needLogin = false; loadAll();
 });
-window.addEventListener("online", () => { if (!LOCAL_ONLY) loadAll(); });
-document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && !needLogin && !LOCAL_ONLY) loadAll(); });
+document.addEventListener("click", e => {
+  if (e.target.id === "skipLogin") { mode = "local"; needLogin = false; loadNote = LOCAL_ONLY_NOTE; render(); }
+});
+window.addEventListener("online", () => { if (mode === "cloud" && !needLogin) loadAll(); });
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && mode === "cloud" && !needLogin) loadAll(); });
 
 /* ---------- boot ---------- */
 logs = lsGet("cache_logs"); meas = lsGet("cache_meas");
 if (!meas.length) { meas = [{ id: PROFILE.startDate, date: PROFILE.startDate, weight: PROFILE.startWeight, waist: null, ts: Date.now() }]; cacheSave(); }
-if (LOCAL_ONLY) loadNote = "Kayıtlar bu telefonda tutuluyor";
+loadNote = "Bağlantı kontrol ediliyor…";
 renderWeek(); render();
-if (!needLogin && !LOCAL_ONLY) loadAll();
+boot();
 </script>
 </body>
 </html>

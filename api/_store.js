@@ -43,12 +43,28 @@ export async function readAll(collection) {
   return out.sort((a, b) => String(a.date || "").localeCompare(String(b.date || "")));
 }
 
-// Şifre: APP_PASSWORD ortam değişkeni. Header (x-app-key) veya ?key= ile gelir.
-export function authorized(req) {
-  const pass = process.env.APP_PASSWORD;
-  if (!pass) return false;
-  const given = req.headers["x-app-key"] || (req.query && req.query.key);
-  return given === pass;
+// Şifre: APP_PASSWORD ortam değişkeni varsa o kullanılır.
+// Yoksa ilk girilen şifre belirlenir; veritabanında sadece özeti (SHA-256) saklanır.
+import { createHash } from "node:crypto";
+const hash = s => createHash("sha256").update("gym-defteri:" + s).digest("hex");
+
+export async function passwordIsSet() {
+  if (process.env.APP_PASSWORD) return true;
+  return Boolean(await redis(["GET", "gym:auth"]));
+}
+
+export async function authorized(req) {
+  const given = String(req.headers["x-app-key"] || (req.query && req.query.key) || "");
+  if (!given) return false;
+  if (process.env.APP_PASSWORD) return given === process.env.APP_PASSWORD;
+  const stored = await redis(["GET", "gym:auth"]);
+  if (!stored) {
+    if (given.length < 4) return false;
+    // ilk kurulum: bu şifre kalıcı olur (NX: aynı anda iki istek gelirse ilki kazanır)
+    await redis(["SET", "gym:auth", hash(given), "NX"]);
+    return (await redis(["GET", "gym:auth"])) === hash(given);
+  }
+  return stored === hash(given);
 }
 
 export function fail(res, code, message) {
