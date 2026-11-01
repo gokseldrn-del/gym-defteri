@@ -617,6 +617,7 @@ async function api(method, query, body) {
   return j;
 }
 async function persist(c, id, doc) {
+  if (LOCAL_ONLY) return { text: "Kaydedildi ✓" };
   try { await api("POST", "", { c, id, doc }); online = true; return { text: "Kaydedildi ✓" }; }
   catch (e) {
     if (e.status === 401) { needLogin = true; }
@@ -646,7 +647,9 @@ async function loadAll() {
   }
   render();
 }
-let needLogin = !getKey(), loginErr = "";
+// Şimdilik kayıtlar sadece bu telefonda (sunucu kurulumu sonra). true → false yapınca bulut senkronu açılır.
+const LOCAL_ONLY = true;
+let needLogin = LOCAL_ONLY ? false : !getKey(), loginErr = "";
 function loginCard() {
   return `<section class="dayhead"><h2>Giriş</h2><p class="sub">Defterin şifreli. Şifreyi bir kez gir, bu cihaz hatırlayacak.</p></section>
   <form class="card" id="loginForm">
@@ -661,13 +664,15 @@ document.addEventListener("submit", e => {
   setKey(document.getElementById("pw").value.trim());
   loadAll();
 });
-window.addEventListener("online", loadAll);
-document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && !needLogin) loadAll(); });
+window.addEventListener("online", () => { if (!LOCAL_ONLY) loadAll(); });
+document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && !needLogin && !LOCAL_ONLY) loadAll(); });
 
 /* ---------- boot ---------- */
 logs = lsGet("cache_logs"); meas = lsGet("cache_meas");
+if (!meas.length) { meas = [{ id: PROFILE.startDate, date: PROFILE.startDate, weight: PROFILE.startWeight, waist: null, ts: Date.now() }]; cacheSave(); }
+if (LOCAL_ONLY) loadNote = "Kayıtlar bu telefonda tutuluyor";
 renderWeek(); render();
-if (!needLogin) loadAll();
+if (!needLogin && !LOCAL_ONLY) loadAll();
 </script>
 </body>
 </html>
