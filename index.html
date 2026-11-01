@@ -158,6 +158,12 @@ th { font-size: 12px; color: var(--muted); font-weight: 700; }
 .hero .kpi { background: #fff; }
 .kpi .big { font-size: 22px; }
 @media (max-width: 380px) { .hero { grid-template-columns: 1fr 110px; } .demo-wrap { grid-template-columns: 1fr 80px; } }
+.opts { display: flex; flex-wrap: wrap; gap: 8px; }
+.opt { font: 700 14px var(--font-body); border: 0; background: var(--soft); color: var(--ink); padding: 9px 14px; border-radius: 999px; cursor: pointer; }
+.opt.on { background: var(--accent); color: #fff; }
+.q { margin: 0; font-weight: 800; font-size: 15px; }
+.tips { margin: 0; padding-left: 18px; display: grid; gap: 4px; font-size: 13.5px; color: var(--muted); }
+.card.extra .ex-idx { background: var(--warn-soft); color: var(--warn); }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 </head>
@@ -185,40 +191,43 @@ th { font-size: 12px; color: var(--muted); font-weight: 700; }
 const PROGRAM = {
   upperA: { name: "Üst Vücut A", short: "Üst A", day: "Pazar", focus: "Göğüs ve sırt ağırlıklı",
     ex: [
-      { id: "wpushup", name: "Ağırlıklı Şınav", sets: 3, lo: 8, hi: 12, rest: 120, tip: "Plakayı kürek kemiklerinin arasına koy (birine koydurmak en kolayı) ya da ağırlık yeleği giy. Eller şınav tutacağı veya dumbbell üstünde, göğüs ellerin arasına kadar insin. Vücut tahta gibi düz, kalça düşmesin. Kg kısmına sırttaki ağırlığı yaz; 12 tekrarı rahat geçiyorsan plakayı büyüt." },
-      { id: "row_cs", name: "Göğüs Destekli Row", sets: 3, lo: 8, hi: 10, rest: 120, tip: "Makine yoksa incline bench'e yüzüstü yat, dumbbell ile çek. Dirsekleri kalçaya doğru çek, belden sallanma." },
+      { id: "wpushup", name: "Ağırlıklı Şınav", sets: 4, lo: 8, hi: 12, rest: 120, tip: "Plakayı kürek kemiklerinin arasına koy (birine koydurmak en kolayı) ya da ağırlık yeleği giy. Eller şınav tutacağı veya dumbbell üstünde, göğüs ellerin arasına kadar insin. Vücut tahta gibi düz, kalça düşmesin. Kg kısmına sırttaki ağırlığı yaz; 12 tekrarı rahat geçiyorsan plakayı büyüt." },
+      { id: "row_cs", name: "Göğüs Destekli Row", sets: 4, lo: 8, hi: 10, rest: 120, tip: "Makine yoksa incline bench'e yüzüstü yat, dumbbell ile çek. Dirsekleri kalçaya doğru çek, belden sallanma." },
       { id: "incline_db", name: "Incline Dumbbell Press", sets: 3, lo: 8, hi: 12, rest: 90, tip: "Bench 30°. Dumbbell'lar göğüs hizasına kadar insin, üstte kilitleme." },
       { id: "pulldown", name: "Lat Pulldown", sets: 3, lo: 10, hi: 12, rest: 90, tip: "Bar köprücük kemiğine insin, göğüs yukarıda. Çekerken dirsekleri aşağı ve arkaya düşün." },
-      { id: "lateral", name: "Dumbbell Lateral Raise", sets: 3, lo: 12, hi: 15, rest: 60, tip: "Hafif ağırlık, omuz hizasına kadar kaldır. Savurma yok, iniş 2 sn." },
-      { id: "ez_curl", name: "EZ Bar Curl", sets: 2, lo: 10, hi: 12, rest: 0, tip: "Pushdown ile süperset: curl'ü bitir, dinlenmeden pushdown'a geç." },
-      { id: "pushdown", name: "Kablo Triceps Pushdown", sets: 2, lo: 10, hi: 12, rest: 60, tip: "Dirsekler gövdeye yapışık, altta tam aç. Süperset bitince 60 sn dinlen." }
+      { id: "cable_fly", name: "Kablo Fly (göğüs)", sets: 3, lo: 12, hi: 15, rest: 60, tip: "Makaralar omuz hizasında. Kollar hafif bükük ve sabit; kolları sarılır gibi önde birleştir, göğsü sık. Açılırken göğüste esneme hisset, omuzu öne düşürme." },
+      { id: "lateral", name: "Dumbbell Lateral Raise", sets: 4, lo: 12, hi: 15, rest: 60, tip: "Hafif ağırlık, omuz hizasına kadar kaldır. Savurma yok, iniş 2 sn." },
+      { id: "ez_curl", name: "EZ Bar Curl", sets: 3, lo: 10, hi: 12, rest: 0, tip: "Pushdown ile süperset: curl'ü bitir, dinlenmeden pushdown'a geç." },
+      { id: "pushdown", name: "Kablo Triceps Pushdown", sets: 3, lo: 10, hi: 12, rest: 60, tip: "Dirsekler gövdeye yapışık, altta tam aç. Süperset bitince 60 sn dinlen." }
     ] },
   lowerA: { name: "Alt Vücut A", short: "Alt A", day: "Pazartesi", focus: "Squat ağırlıklı",
     ex: [
-      { id: "squat", name: "Barbell Back Squat", sets: 3, lo: 6, hi: 8, rest: 180, tip: "En az paralel derinlik. Dizler ayak ucu yönünde, göğüs dik. 2 ısınma seti yap." },
+      { id: "squat", name: "Barbell Back Squat", sets: 4, lo: 6, hi: 8, rest: 180, tip: "En az paralel derinlik. Dizler ayak ucu yönünde, göğüs dik. 2 ısınma seti yap." },
       { id: "rdl", name: "Romanian Deadlift", sets: 3, lo: 8, hi: 10, rest: 150, tip: "Kalçayı geriye it, dizler hafif bükük, bel düz. Hamstringde gerilme hissedince yukarı." },
       { id: "leg_press", name: "Leg Press", sets: 3, lo: 10, hi: 12, rest: 120, tip: "Kalça platformdan kalkmasın. Dizleri üstte kilitleme." },
       { id: "leg_curl", name: "Yatarak Leg Curl", sets: 3, lo: 10, hi: 12, rest: 90, tip: "Kalça bench'te sabit, iniş yavaş." },
-      { id: "calf_standing", name: "Ayakta Calf Raise", sets: 3, lo: 12, hi: 15, rest: 60, tip: "Altta 1 sn esneme, üstte 1 sn sıkma." },
+      { id: "calf_standing", name: "Ayakta Calf Raise", sets: 4, lo: 12, hi: 15, rest: 60, tip: "Altta 1 sn esneme, üstte 1 sn sıkma." },
       { id: "cable_crunch", name: "Kablo Crunch", sets: 3, lo: 12, hi: 15, rest: 60, tip: "Kalçayla değil karınla bük, kaburgaları kalçaya yaklaştır." }
     ] },
   upperB: { name: "Üst Vücut B", short: "Üst B", day: "Çarşamba", focus: "Omuz ve dikey çekiş ağırlıklı",
     ex: [
-      { id: "ohp", name: "Ayakta Overhead Press", sets: 3, lo: 6, hi: 8, rest: 150, tip: "Kalça ve karın sıkı, bel kavislenmesin. Bar başın üstünde bitsin." },
-      { id: "pullup", name: "Pull-up (gerekirse asistli)", sets: 3, lo: 6, hi: 10, rest: 150, tip: "6 tekrar çıkmıyorsa asistli makine ya da ağır pulldown. Kg'ye ek ağırlığı veya asist kilosunu yaz." },
+      { id: "ohp", name: "Ayakta Overhead Press", sets: 4, lo: 6, hi: 8, rest: 150, tip: "Kalça ve karın sıkı, bel kavislenmesin. Bar başın üstünde bitsin." },
+      { id: "pullup", name: "Pull-up (gerekirse asistli)", sets: 4, lo: 6, hi: 10, rest: 150, tip: "6 tekrar çıkmıyorsa asistli makine ya da ağır pulldown. Kg'ye ek ağırlığı veya asist kilosunu yaz." },
       { id: "db_bench", name: "Düz Dumbbell Bench Press", sets: 3, lo: 8, hi: 12, rest: 90, tip: "Altta derin esneme, dirsekler 45° açıda." },
+      { id: "dips", name: "Dips (paralel bar)", sets: 3, lo: 8, hi: 12, rest: 90, tip: "Gövde hafif öne eğik, dirsekler geriye. Omuzlar dirsek hizasına kadar insin, fazlası değil. 12'yi geçersen bele ağırlık tak, çıkmazsa asistli makinede yap. Kg kısmına ek ağırlığı yaz." },
       { id: "cable_row", name: "Oturarak Kablo Row", sets: 3, lo: 10, hi: 12, rest: 90, tip: "Göğüs dik, kolu karına çek, kürek kemiklerini birleştir." },
       { id: "rear_delt", name: "Reverse Pec Deck / Face Pull", sets: 3, lo: 12, hi: 15, rest: 60, tip: "Arka omuz için. Hafif kilo, kontrollü." },
-      { id: "incline_curl", name: "Incline Dumbbell Curl", sets: 2, lo: 10, hi: 12, rest: 0, tip: "Triceps extension ile süperset. Dirsek geride sabit." },
-      { id: "oh_tri", name: "Kablo Overhead Triceps Ext.", sets: 2, lo: 10, hi: 12, rest: 60, tip: "Kablo arkada, dirsekler yukarıda sabit, tam aç." }
+      { id: "incline_curl", name: "Incline Dumbbell Curl", sets: 3, lo: 10, hi: 12, rest: 0, tip: "Triceps extension ile süperset. Dirsek geride sabit." },
+      { id: "oh_tri", name: "Kablo Overhead Triceps Ext.", sets: 3, lo: 10, hi: 12, rest: 60, tip: "Kablo arkada, dirsekler yukarıda sabit, tam aç." }
     ] },
   lowerB: { name: "Alt Vücut B", short: "Alt B", day: "Perşembe", focus: "Kalça zinciri ve tek bacak",
     ex: [
       { id: "deadlift", name: "Deadlift (klasik veya trap bar)", sets: 3, lo: 5, hi: 6, rest: 180, tip: "Bar ayak ortasının üstünde, bel nötr. Her tekrarda barı yere bırak, zıplatma." },
       { id: "bss", name: "Bulgarian Split Squat", sets: 3, lo: 8, hi: 10, rest: 120, tip: "Her bacak için ayrı tekrar. Kg'ye elindeki tek dumbbell'ın kilosunu yaz." },
+      { id: "hip_thrust", name: "Hip Thrust", sets: 3, lo: 8, hi: 12, rest: 90, tip: "Sırtın üst kısmı bench'te, bar kalça kemiğinde (altına ped koy). Topuklardan it, üstte kalçayı 1 sn sık; beli aşırı kavislendirme, çene hafif içeride." },
       { id: "leg_ext", name: "Leg Extension", sets: 3, lo: 12, hi: 15, rest: 60, tip: "Üstte 1 sn sık, iniş yavaş." },
       { id: "seated_curl", name: "Oturarak Leg Curl", sets: 3, lo: 10, hi: 12, rest: 90, tip: "Hafif öne eğil, hamstring daha iyi esner." },
-      { id: "calf_seated", name: "Oturarak Calf Raise", sets: 3, lo: 15, hi: 20, rest: 60, tip: "Tam hareket açıklığı, altta duraksa." },
+      { id: "calf_seated", name: "Oturarak Calf Raise", sets: 4, lo: 15, hi: 20, rest: 60, tip: "Tam hareket açıklığı, altta duraksa." },
       { id: "hanging_leg", name: "Asılı Diz / Bacak Kaldırma", sets: 3, lo: 10, hi: 15, rest: 60, tip: "Sallanmadan, kalçayı hafif yukarı kıvır. Kg boş kalabilir." }
     ] }
 };
@@ -258,7 +267,10 @@ const META = {
   leg_ext:      { en: "leg extension form", p: ["quads"], s: [] },
   seated_curl:  { en: "seated leg curl form", p: ["hamstrings"], s: [] },
   calf_seated:  { en: "seated calf raise form", p: ["calves"], s: [] },
-  hanging_leg:  { en: "hanging leg raise form", p: ["abs"], s: ["forearms"] }
+  hanging_leg:  { en: "hanging leg raise form", p: ["abs"], s: ["forearms"] },
+  cable_fly:    { en: "cable chest fly proper form", p: ["chest"], s: ["delts"] },
+  dips:         { en: "chest dips proper form", p: ["chest", "triceps"], s: ["delts"] },
+  hip_thrust:   { en: "barbell hip thrust proper form", p: ["glutes"], s: ["hamstrings", "quads"] }
 };
 const MUSCLE_TR = { chest: "Göğüs", delts: "Ön/yan omuz", rear_delt: "Arka omuz", biceps: "Biceps", triceps: "Triceps", forearms: "Ön kol", abs: "Karın", lats: "Kanat (lat)", traps: "Trapez / üst sırt", lower_back: "Bel", glutes: "Kalça", quads: "Ön bacak", hamstrings: "Arka bacak", calves: "Baldır" };
 
@@ -372,7 +384,8 @@ function exCard(ex, i, dayKey) {
   const prev = lastSessions(ex.id, 6).filter(l => l.date !== today);
   const last = prev[0];
   let advice = "";
-  if (last && last.sets.length >= ex.sets && last.sets.slice(0, ex.sets).every(s => Number(s.reps) >= ex.hi)) advice = `<span class="chip good">Ağırlığı artır</span>`;
+  const lastDone = last ? last.sets.filter(s => s.reps !== "" && s.reps != null) : [];
+  if (last && lastDone.length && lastDone.every(s => Number(s.reps) >= ex.hi)) advice = `<span class="chip good">Ağırlığı artır</span>`;
   else if (last) advice = `<span class="chip plain">Aynı kiloda tekrar artır</span>`;
   else advice = `<span class="chip warn">İlk kez: ağırlığı bul</span>`;
   const rows = [];
@@ -462,8 +475,9 @@ function renderDay(key) {
       ${bodySVG(prim, sec)}
     </div>
     <div class="note"><p><b>Isınma:</b> 5 dk yürüyüş + hafif mobilite. İlk harekette 2 hafif ısınma seti.</p>
-    <p><b>Bitiş:</b> 10–15 dk eğimli yürüyüş (eğim 10–12, hız 5–5.5).</p></div>
-    ${p.ex.map((e, i) => exCard(e, i, key)).join("")}`;
+    <p><b>Bitiş:</b> en altta kardiyo ve sauna seçenekleri var.</p></div>
+    ${p.ex.map((e, i) => exCard(e, i, key)).join("")}
+    ${extrasHTML(key)}`;
 }
 
 function renderMeas() {
@@ -566,6 +580,71 @@ async function saveMeas() {
   messages.__meas = await persist("measurements", date, doc);
   render();
 }
+
+
+/* ---------- kardiyo & sauna ---------- */
+const CARDIO_TYPES = [["bisiklet", "Bisiklet"], ["kosu", "Koşu bandı"], ["yuruyus", "Eğimli yürüyüş"], ["kurek", "Kürek"], ["eliptik", "Eliptik"]];
+const extraUI = {};
+function extraLog(kind) { return logs.find(l => l.exId === kind && l.date === todayStr()); }
+function optBtns(kind, field, opts, sel) {
+  return `<div class="opts">${opts.map(([v, t]) => `<button type="button" class="opt ${String(sel) === String(v) ? "on" : ""}" data-x-kind="${kind}" data-x-field="${field}" data-x-val="${v}">${t}</button>`).join("")}</div>`;
+}
+function extraCard(kind, dayKey) {
+  const isLeg = dayKey.startsWith("lower");
+  const ui = extraUI[kind] || (extraUI[kind] = { ans: null, type: isLeg ? "bisiklet" : "yuruyus", min: kind === "sauna" ? 10 : 10 });
+  const saved = extraLog(kind);
+  const title = kind === "cardio" ? "Kardiyo" : "Sauna";
+  const icon = kind === "cardio" ? "♥" : "♨";
+  const info = kind === "cardio"
+    ? `<p class="tip">Recomp için haftada 2–3 kez 10–20 dk orta tempo yeterli: nefesin hızlansın ama konuşabil. ${isLeg ? "Bugün bacak günü, dizleri yormamak için <b>bisiklet</b> iyi bir seçim." : "Üst vücut günü; <b>eğimli yürüyüş</b> ya da <b>koşu</b> uygun."} Kardiyoyu ağırlıklardan <b>sonra</b> yap.</p>`
+    : `<ul class="tips">
+        <li>Antrenmandan (ve kardiyodan) <b>sonra</b> yap. İlk seferlerde 8–10 dk, alışınca 15 dk yeterli.</li>
+        <li>Öncesinde ve sonrasında yarım litre su iç. Başın döner ya da miden bulanırsa hemen çık.</li>
+        <li>Çıkınca ılık-serin duş al, birkaç dakika otur.</li>
+        <li>Saunada kaybedilen kilo sudur, yağ değil. Tartıya ertesi sabah çık.</li>
+        <li>Rahatlama ve toparlanma için iyi; hastayken ya da alkol sonrası girme.</li>
+      </ul>`;
+  let body;
+  if (saved && !ui.editing) {
+    body = saved.done
+      ? `<p class="last">✓ Bugün: <b>${saved.minutes} dk ${esc(saved.typeName || "sauna")}</b></p>`
+      : `<p class="last">Bugün ${kind === "cardio" ? "kardiyo" : "sauna"} yok.</p>`;
+    body += `<div class="actions"><button type="button" class="btn small" data-x-edit="${kind}">Değiştir</button></div>`;
+  } else {
+    const q = kind === "cardio" ? "Antrenmandan sonra kardiyo yapacak mısın?" : "Bugün sauna yapacak mısın?";
+    body = `<p class="q">${q}</p>
+      ${optBtns(kind, "ans", [["yes", "Evet"], ["no", "Bugün değil"]], ui.ans)}`;
+    if (ui.ans === "yes") {
+      if (kind === "cardio") body += `<div class="lbl">Ne yapacaksın?</div>${optBtns(kind, "type", CARDIO_TYPES, ui.type)}`;
+      body += `<div class="lbl">Kaç dakika?</div>${optBtns(kind, "min", (kind === "cardio" ? [10, 15, 20, 30] : [8, 10, 15, 20]).map(m => [m, m + " dk"]), ui.min)}`;
+    }
+    if (ui.ans) body += `<div class="actions"><button type="button" class="btn primary" data-x-save="${kind}" data-day="${dayKey}">Kaydet</button>${messages["x_" + kind] ? `<span class="msg">${esc(messages["x_" + kind].text)}</span>` : ""}</div>`;
+  }
+  return `<article class="card extra ${saved && saved.done ? "done" : ""}">
+    <div class="ex-title"><span class="ex-idx">${icon}</span><h3>${title}</h3></div>
+    ${info}${body}
+  </article>`;
+}
+function extrasHTML(dayKey) { return extraCard("cardio", dayKey) + extraCard("sauna", dayKey); }
+async function saveExtra(kind, dayKey) {
+  const ui = extraUI[kind];
+  const date = todayStr(), id = date + "_" + kind;
+  const yes = ui.ans === "yes";
+  const typeName = kind === "cardio" ? (CARDIO_TYPES.find(t => t[0] === ui.type) || [, ""])[1].toLowerCase() : "sauna";
+  const doc = { date, dayKey, dayName: PROGRAM[dayKey].name, exId: kind, exName: kind === "cardio" ? "Kardiyo" : "Sauna", done: yes, type: yes && kind === "cardio" ? ui.type : null, typeName: yes ? typeName : null, minutes: yes ? Number(ui.min) : 0, sets: [], ts: Date.now() };
+  logs = logs.filter(l => l.id !== id).concat([{ id, ...doc }]);
+  cacheSave(); ui.editing = false;
+  messages["x_" + kind] = await persist("logs", id, doc);
+  render();
+}
+document.addEventListener("click", e => {
+  const t = e.target.closest("button"); if (!t) return;
+  if (t.dataset.xKind) {
+    const ui = extraUI[t.dataset.xKind];
+    ui[t.dataset.xField] = t.dataset.xVal; render();
+  } else if (t.dataset.xSave) saveExtra(t.dataset.xSave, t.dataset.day);
+  else if (t.dataset.xEdit) { const k = t.dataset.xEdit, sv = extraLog(k); const ui = extraUI[k] || (extraUI[k] = {}); ui.editing = true; if (sv) { ui.ans = sv.done ? "yes" : "no"; if (sv.type) ui.type = sv.type; if (sv.minutes) ui.min = sv.minutes; } render(); }
+});
 
 /* ---------- timer ---------- */
 let tEnd = 0, tInt = null;
