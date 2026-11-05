@@ -53,13 +53,18 @@ h3 { font-size: 18px; line-height: 1.25; font-weight: 800; }
 .sub { color: var(--muted); font-size: 14px; margin: 4px 0 0; }
 .num { font-variant-numeric: tabular-nums; }
 
-.week { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
-.wd { background: var(--soft); border-radius: 14px; padding: 8px 2px; text-align: center; font-size: 11px; color: var(--muted); font-weight: 600; }
-.wd b { display: block; font-size: 13px; color: var(--muted); font-weight: 800; }
-.wd.train b { color: var(--accent); }
-.wd.today { background: var(--accent); color: rgba(255,255,255,.85); }
-.wd.today b { color: #fff; }
-
+.week { display: grid; gap: 8px; }
+.cycle-head { display: flex; justify-content: space-between; align-items: baseline; font-size: 13px; color: var(--muted); font-weight: 700; }
+.cycle-head b { color: var(--ink); font-weight: 800; }
+.cycle { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.wd { font-family: var(--font-body); border: 0; cursor: pointer; background: var(--soft); border-radius: 16px; padding: 10px 6px; text-align: center; display: grid; gap: 2px; color: var(--muted); }
+.wd span { font-size: 11px; font-weight: 700; }
+.wd b { font-size: 15px; color: var(--ink); font-weight: 900; }
+.wd i { font-style: normal; font-size: 11px; font-weight: 800; min-height: 15px; color: var(--accent); }
+.wd.done { background: var(--good-soft); }
+.wd.done i { color: var(--good); }
+.wd.today { background: var(--accent); color: rgba(255,255,255,.85); box-shadow: 0 4px 14px rgba(91,124,250,.3); }
+.wd.today b, .wd.today i { color: #fff; }
 .tabs { display: flex; gap: 8px; overflow-x: auto; padding: 2px 0 4px; scrollbar-width: none; }
 .tabs::-webkit-scrollbar { display: none; }
 .tab { flex: 0 0 auto; font: 700 14px var(--font-body); border: 0; background: var(--soft); color: var(--ink); padding: 9px 16px; border-radius: 999px; cursor: pointer; }
@@ -189,7 +194,7 @@ th { font-size: 12px; color: var(--muted); font-weight: 700; }
 <script src="/figures.js"></script>
 <script>
 const PROGRAM = {
-  upperA: { name: "Üst Vücut A", short: "Üst A", day: "Pazar", focus: "Göğüs ve sırt ağırlıklı",
+  upperA: { name: "Üst Vücut A", short: "Üst A", focus: "Göğüs ve sırt ağırlıklı",
     ex: [
       { id: "wpushup", name: "Ağırlıklı Şınav", sets: 4, lo: 8, hi: 12, rest: 120, tip: "Plakayı kürek kemiklerinin arasına koy (birine koydurmak en kolayı) ya da ağırlık yeleği giy. Eller şınav tutacağı veya dumbbell üstünde, göğüs ellerin arasına kadar insin. Vücut tahta gibi düz, kalça düşmesin. Kg kısmına sırttaki ağırlığı yaz; 12 tekrarı rahat geçiyorsan plakayı büyüt." },
       { id: "row_cs", name: "Göğüs Destekli Row", sets: 4, lo: 8, hi: 10, rest: 120, tip: "Makine yoksa incline bench'e yüzüstü yat, dumbbell ile çek. Dirsekleri kalçaya doğru çek, belden sallanma." },
@@ -200,7 +205,7 @@ const PROGRAM = {
       { id: "ez_curl", name: "EZ Bar Curl", sets: 3, lo: 10, hi: 12, rest: 0, tip: "Pushdown ile süperset: curl'ü bitir, dinlenmeden pushdown'a geç." },
       { id: "pushdown", name: "Kablo Triceps Pushdown", sets: 3, lo: 10, hi: 12, rest: 60, tip: "Dirsekler gövdeye yapışık, altta tam aç. Süperset bitince 60 sn dinlen." }
     ] },
-  lowerA: { name: "Alt Vücut A", short: "Alt A", day: "Pazartesi", focus: "Squat ağırlıklı",
+  lowerA: { name: "Alt Vücut A", short: "Alt A", focus: "Squat ağırlıklı",
     ex: [
       { id: "squat", name: "Barbell Back Squat", sets: 4, lo: 6, hi: 8, rest: 180, tip: "En az paralel derinlik. Dizler ayak ucu yönünde, göğüs dik. 2 ısınma seti yap." },
       { id: "rdl", name: "Romanian Deadlift", sets: 3, lo: 8, hi: 10, rest: 150, tip: "Kalçayı geriye it, dizler hafif bükük, bel düz. Hamstringde gerilme hissedince yukarı." },
@@ -209,7 +214,7 @@ const PROGRAM = {
       { id: "calf_standing", name: "Ayakta Calf Raise", sets: 4, lo: 12, hi: 15, rest: 60, tip: "Altta 1 sn esneme, üstte 1 sn sıkma." },
       { id: "cable_crunch", name: "Kablo Crunch", sets: 3, lo: 12, hi: 15, rest: 60, tip: "Kalçayla değil karınla bük, kaburgaları kalçaya yaklaştır." }
     ] },
-  upperB: { name: "Üst Vücut B", short: "Üst B", day: "Çarşamba", focus: "Omuz ve dikey çekiş ağırlıklı",
+  upperB: { name: "Üst Vücut B", short: "Üst B", focus: "Omuz ve dikey çekiş ağırlıklı",
     ex: [
       { id: "ohp", name: "Ayakta Overhead Press", sets: 4, lo: 6, hi: 8, rest: 150, tip: "Kalça ve karın sıkı, bel kavislenmesin. Bar başın üstünde bitsin." },
       { id: "pullup", name: "Pull-up (gerekirse asistli)", sets: 4, lo: 6, hi: 10, rest: 150, tip: "6 tekrar çıkmıyorsa asistli makine ya da ağır pulldown. Kg'ye ek ağırlığı veya asist kilosunu yaz." },
@@ -220,7 +225,7 @@ const PROGRAM = {
       { id: "incline_curl", name: "Incline Dumbbell Curl", sets: 3, lo: 10, hi: 12, rest: 0, tip: "Triceps extension ile süperset. Dirsek geride sabit." },
       { id: "oh_tri", name: "Kablo Overhead Triceps Ext.", sets: 3, lo: 10, hi: 12, rest: 60, tip: "Kablo arkada, dirsekler yukarıda sabit, tam aç." }
     ] },
-  lowerB: { name: "Alt Vücut B", short: "Alt B", day: "Perşembe", focus: "Kalça zinciri ve tek bacak",
+  lowerB: { name: "Alt Vücut B", short: "Alt B", focus: "Kalça zinciri ve tek bacak",
     ex: [
       { id: "deadlift", name: "Deadlift (klasik veya trap bar)", sets: 3, lo: 5, hi: 6, rest: 180, tip: "Bar ayak ortasının üstünde, bel nötr. Her tekrarda barı yere bırak, zıplatma." },
       { id: "bss", name: "Bulgarian Split Squat", sets: 3, lo: 8, hi: 10, rest: 120, tip: "Her bacak için ayrı tekrar. Kg'ye elindeki tek dumbbell'ın kilosunu yaz." },
@@ -231,10 +236,6 @@ const PROGRAM = {
       { id: "hanging_leg", name: "Asılı Diz / Bacak Kaldırma", sets: 3, lo: 10, hi: 15, rest: 60, tip: "Sallanmadan, kalçayı hafif yukarı kıvır. Kg boş kalabilir." }
     ] }
 };
-const WEEK = [ // getDay(): 0=Pazar
-  { d: "Paz", key: "upperA" }, { d: "Pzt", key: "lowerA" }, { d: "Sal", key: null },
-  { d: "Çar", key: "upperB" }, { d: "Per", key: "lowerB" }, { d: "Cum", key: null }, { d: "Cmt", key: null }
-];
 const ORDER = ["upperA", "lowerA", "upperB", "lowerB"];
 const TAB_EXTRA = [{ key: "olcum", short: "Ölçüm" }, { key: "kurallar", short: "Kurallar" }];
 const PROFILE = { height: 180, startWeight: 74, startDate: "2026-11-01" };
@@ -349,15 +350,38 @@ const esc = s => String(s ?? "").replace(/[&<>"']/g, c => ({ "&": "&amp;", "<": 
 let logs = [];      // {id,date,dayKey,exId,exName,sets:[{kg,reps}],ts}
 let meas = [];      // {id,date,weight,waist,note}
 let online = false, loadNote = "Kayıtlar yükleniyor…";
-let current = WEEK[new Date().getDay()].key || nextTrainingKey();
+let current = "upperA", userPicked = false;
 const openHist = new Set();
 const messages = {};
 
-function nextTrainingKey() {
-  const t = new Date().getDay();
-  for (let i = 1; i <= 7; i++) { const k = WEEK[(t + i) % 7].key; if (k) return k; }
-  return "upperA";
+/* Sıra mantığı: günler sabit değil. Sıradaki antrenman = son yapılan antrenmandan bir sonraki.
+   Bir döngü 4 antrenman: 1 Üst A → 2 Alt A → 3 Üst B → 4 Alt B. */
+function sessionList() {
+  const m = {};
+  logs.forEach(l => {
+    if (!PROGRAM[l.dayKey] || l.exId === "cardio" || l.exId === "sauna") return;
+    (m[l.date] = m[l.date] || {})[l.dayKey] = (m[l.date][l.dayKey] || 0) + 1;
+  });
+  return Object.entries(m).map(([date, c]) => ({ date, key: Object.entries(c).sort((x, y) => y[1] - x[1])[0][0] }))
+    .sort((x, y) => x.date.localeCompare(y.date));
 }
+function planToday() {
+  const list = sessionList(), today = todayStr();
+  const t = list.find(x => x.date === today);
+  const past = list.filter(x => x.date < today);
+  const key = t ? t.key : (past.length ? ORDER[(ORDER.indexOf(past[past.length - 1].key) + 1) % ORDER.length] : ORDER[0]);
+  const idx = ORDER.indexOf(key);
+  const done = new Set();
+  if (idx === 0) { if (t) done.add(key); }
+  else {
+    const starts = list.filter(x => x.key === ORDER[0] && x.date <= today);
+    const d0 = starts.length ? starts[starts.length - 1].date : "";
+    list.filter(x => x.date >= d0 && x.date <= today).forEach(x => { if (ORDER.indexOf(x.key) <= idx) done.add(x.key); });
+    if (!t) done.delete(key);
+  }
+  return { key, n: idx + 1, done, doneToday: !!t };
+}
+const progNo = key => ORDER.indexOf(key) + 1;
 
 /* ---------- local fallback ---------- */
 function lsGet(k) { try { return JSON.parse(localStorage.getItem(k) || "[]"); } catch (e) { return []; } }
@@ -365,12 +389,17 @@ function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch
 
 /* ---------- render ---------- */
 function renderWeek() {
-  const t = new Date().getDay();
-  document.getElementById("week").innerHTML = WEEK.map((w, i) =>
-    `<div class="wd ${w.key ? "train" : ""} ${i === t ? "today" : ""}">${w.d}<b>${w.key ? PROGRAM[w.key].short : "Off"}</b></div>`).join("");
+  const pl = planToday();
+  document.getElementById("week").innerHTML = `
+    <div class="cycle-head"><span>Bu hafta</span><b class="num">${pl.done.size}/4 tamam</b></div>
+    <div class="cycle">${ORDER.map((k, i) => {
+      const isDone = pl.done.has(k), isNow = k === pl.key;
+      return `<button type="button" class="wd ${isNow ? "today" : ""} ${isDone ? "done" : ""}" data-tab="${k}">
+        <span>${i + 1}. gün</span><b>${PROGRAM[k].short}</b><i>${isDone ? "✓ yapıldı" : (isNow ? "sıradaki" : "")}</i></button>`;
+    }).join("")}</div>`;
 }
 function renderTabs() {
-  const tabs = ORDER.map(k => ({ key: k, short: PROGRAM[k].short })).concat(TAB_EXTRA);
+  const tabs = ORDER.map((k, i) => ({ key: k, short: (i + 1) + " · " + PROGRAM[k].short })).concat(TAB_EXTRA);
   document.getElementById("tabs").innerHTML = tabs.map(t =>
     `<button type="button" class="tab" role="tab" id="tab-${t.key}" aria-selected="${t.key === current}" data-tab="${t.key}">${t.short}</button>`).join("");
 }
@@ -444,7 +473,7 @@ function renderDay(key) {
   const p = PROGRAM[key];
   const today = todayStr();
   const doneCount = p.ex.filter(e => logs.some(l => l.exId === e.id && l.date === today)).length;
-  const isToday = WEEK[new Date().getDay()].key === key;
+  const isToday = planToday().key === key;
   const prim = [...new Set(p.ex.flatMap(e => (META[e.id] || { p: [] }).p))];
   const sec = [...new Set(p.ex.flatMap(e => (META[e.id] || { s: [] }).s))].filter(k => !prim.includes(k));
   const totalSets = p.ex.reduce((a, e) => a + e.sets, 0);
@@ -452,8 +481,8 @@ function renderDay(key) {
   const C = 2 * Math.PI * 30;
   const sessions = new Set(logs.filter(l => l.dayKey === key).map(l => l.date)).size;
   return `<section class="dayhead">
-      <h2>${p.name} · ${p.day}</h2>
-      <p class="sub">${p.focus}. ${isToday ? "Bugünün antrenmanı." : ""}</p>
+      <h2>${progNo(key)}. Gün · ${p.name}</h2>
+      <p class="sub">${p.focus}. ${isToday ? "Bugün sıradaki antrenmanın bu." : ""}</p>
       ${statusLine()}
     </section>
     <div class="hero">
@@ -519,6 +548,11 @@ function renderRules() {
     <li>Tüm setlerde aralığın üstüne ulaştığında bir sonraki seferde kiloyu artır: üst vücut +2.5 kg, alt vücut +5 kg, dumbbell'da bir sonraki kilo.</li>
     <li>Kilo artınca tekrar düşer, tekrar aralığın altından yukarı çıkarsın. Kartın üstündeki yeşil etiket bunu sana söyler.</li>
   </ul></div>
+  <div class="note"><h3>Hangi gün ne yapacağım?</h3><ul>
+    <li>Günler sabit değil. Salona hangi gün gidersen <b>sıradaki</b> antrenmanı yap; site açılınca onu otomatik gösterir.</li>
+    <li>Sıra: 1 Üst A → 2 Alt A → 3 Üst B → 4 Alt B, sonra yeniden 1.</li>
+    <li>Haftada 4 antrenmanı tamamlamaya çalış. Arka arkaya 2 gün olur, 3 gün üst üste gelmesin.</li>
+  </ul></div>
   <div class="note"><h3>Efor</h3><ul>
     <li>Her sette 1–2 tekrar daha yapabilecek gücün kalsın. Son sette 0–1 olabilir.</li>
     <li>Form bozuluyorsa o tekrar sayılmaz.</li>
@@ -534,6 +568,7 @@ function renderRules() {
 
 let renderedView = null;
 function render() {
+  renderWeek();
   renderTabs();
   const v = document.getElementById("view");
   // yazılmış ama kaydedilmemiş değerleri koru
@@ -666,7 +701,7 @@ document.getElementById("timerStop").onclick = () => { clearInterval(tInt); docu
 /* ---------- events ---------- */
 document.addEventListener("click", e => {
   const t = e.target.closest("button"); if (!t) return;
-  if (t.dataset.tab) { current = t.dataset.tab; render(); window.scrollTo(0, 0); }
+  if (t.dataset.tab) { current = t.dataset.tab; userPicked = true; render(); window.scrollTo(0, 0); }
   else if (t.dataset.save) saveEx(t.dataset.save, t.dataset.day);
   else if (t.dataset.hist) { const id = t.dataset.hist; openHist.has(id) ? openHist.delete(id) : openHist.add(id); render(); }
   else if (t.dataset.rest) startTimer(Number(t.dataset.rest), t.dataset.name);
@@ -765,7 +800,8 @@ loadAll = async function () {
     if (e.status === 401) { needLogin = true; loginErr = getKey() ? "Şifre yanlış, tekrar dene." : ""; render(); return; }
   }
   passwordSet = true;
-  return _loadAllCloud();
+  await _loadAllCloud();
+  if (!userPicked) { current = planToday().key; render(); }
 };
 async function boot() {
   try {
@@ -796,7 +832,8 @@ document.addEventListener("visibilitychange", () => { if (document.visibilitySta
 logs = lsGet("cache_logs"); meas = lsGet("cache_meas");
 if (!meas.length) { meas = [{ id: PROFILE.startDate, date: PROFILE.startDate, weight: PROFILE.startWeight, waist: null, ts: Date.now() }]; cacheSave(); }
 loadNote = "Bağlantı kontrol ediliyor…";
-renderWeek(); render();
+current = planToday().key;
+render();
 boot();
 </script>
 </body>
