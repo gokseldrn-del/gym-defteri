@@ -222,6 +222,7 @@ const PROGRAM = {
       { id: "dips", name: "Dips (paralel bar)", sets: 3, lo: 8, hi: 12, rest: 90, tip: "Gövde hafif öne eğik, dirsekler geriye. Omuzlar dirsek hizasına kadar insin, fazlası değil. 12'yi geçersen bele ağırlık tak, çıkmazsa asistli makinede yap. Kg kısmına ek ağırlığı yaz." },
       { id: "cable_row", name: "Oturarak Kablo Row", sets: 3, lo: 10, hi: 12, rest: 90, tip: "Göğüs dik, kolu karına çek, kürek kemiklerini birleştir." },
       { id: "rear_delt", name: "Reverse Pec Deck / Face Pull", sets: 3, lo: 12, hi: 15, rest: 60, tip: "Arka omuz için. Hafif kilo, kontrollü." },
+      { id: "db_curl", name: "Dumbbell Curl", sets: 3, lo: 8, hi: 12, rest: 60, tip: "Dirsekler gövdenin yanında sabit, savurma yok. Yukarı çıkarken avuç içini hafif dışa çevir ve tepede 1 sn sık, iniş 2 sn. Kg kısmına tek dumbbell'ın kilosunu yaz." },
       { id: "incline_curl", name: "Incline Dumbbell Curl", sets: 3, lo: 10, hi: 12, rest: 0, tip: "Triceps extension ile süperset. Dirsek geride sabit." },
       { id: "oh_tri", name: "Kablo Overhead Triceps Ext.", sets: 3, lo: 10, hi: 12, rest: 60, tip: "Kablo arkada, dirsekler yukarıda sabit, tam aç." }
     ] },
@@ -271,6 +272,7 @@ const META = {
   hanging_leg:  { en: "hanging leg raise form", p: ["abs"], s: ["forearms"] },
   cable_fly:    { en: "cable chest fly proper form", p: ["chest"], s: ["delts"] },
   machine_press:{ en: "seated machine chest press proper form", p: ["chest"], s: ["delts", "triceps"] },
+  db_curl:      { en: "standing dumbbell curl proper form", p: ["biceps"], s: ["forearms"] },
   dips:         { en: "chest dips proper form", p: ["chest", "triceps"], s: ["delts"] },
   hip_thrust:   { en: "barbell hip thrust proper form", p: ["glutes"], s: ["hamstrings", "quads"] }
 };
@@ -828,8 +830,26 @@ document.addEventListener("click", e => {
 window.addEventListener("online", () => { if (mode === "cloud" && !needLogin) loadAll(); });
 document.addEventListener("visibilitychange", () => { if (document.visibilityState === "visible" && mode === "cloud" && !needLogin) loadAll(); });
 
+/* ---------- sohbette bildirilen kayıtlar (bir kez eklenir) ---------- */
+const SEED_LOGS = [
+  { id: "2026-11-05_db_curl", date: "2026-11-05", dayKey: "upperB", dayName: "Üst Vücut B", exId: "db_curl", exName: "Dumbbell Curl", target: "3x8-12",
+    sets: [{ kg: 15, reps: 8 }, { kg: 15, reps: 8 }, { kg: 12.5, reps: 8 }], ts: 1793541600000 }
+];
+function applySeeds() {
+  const seeded = lsGet("seeded");
+  let changed = false;
+  SEED_LOGS.forEach(sd => {
+    if (seeded.includes(sd.id)) return;
+    if (!logs.some(l => l.id === sd.id)) { logs.push(sd); changed = true; }
+    seeded.push(sd.id);
+  });
+  lsSet("seeded", seeded);
+  if (changed) cacheSave();
+}
+
 /* ---------- boot ---------- */
 logs = lsGet("cache_logs"); meas = lsGet("cache_meas");
+applySeeds();
 if (!meas.length) { meas = [{ id: PROFILE.startDate, date: PROFILE.startDate, weight: PROFILE.startWeight, waist: null, ts: Date.now() }]; cacheSave(); }
 loadNote = "Bağlantı kontrol ediliyor…";
 current = planToday().key;

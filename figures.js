@@ -220,6 +220,7 @@ const FIG = (() => {
   EX.cable_crunch.A.ua = -40; EX.cable_crunch.A.fa = -150;
   EX.cable_crunch.B.ua = 20; EX.cable_crunch.B.fa = -80;
   EX.bench = EX.db_bench;
+  EX.db_curl = { hi: ["ua"], eq: [F, { t: "db", at: "W", front: true }], A: EX.ez_curl.A, B: EX.ez_curl.B };
 
   function svg(id) {
     const ex = EX[id]; if (!ex) return "";
