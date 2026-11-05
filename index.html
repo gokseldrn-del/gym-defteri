@@ -213,7 +213,7 @@ const PROGRAM = {
     ex: [
       { id: "ohp", name: "Ayakta Overhead Press", sets: 4, lo: 6, hi: 8, rest: 150, tip: "Kalça ve karın sıkı, bel kavislenmesin. Bar başın üstünde bitsin." },
       { id: "pullup", name: "Pull-up (gerekirse asistli)", sets: 4, lo: 6, hi: 10, rest: 150, tip: "6 tekrar çıkmıyorsa asistli makine ya da ağır pulldown. Kg'ye ek ağırlığı veya asist kilosunu yaz." },
-      { id: "db_bench", name: "Düz Dumbbell Bench Press", sets: 3, lo: 8, hi: 12, rest: 90, tip: "Altta derin esneme, dirsekler 45° açıda." },
+      { id: "machine_press", name: "Makinede Chest Press (oturarak)", sets: 3, lo: 8, hi: 12, rest: 90, tip: "Koltuğu, tutacaklar göğsün ortası hizasına gelecek şekilde ayarla. Sırt ve kürek kemikleri pede yapışık, ayaklar yerde. İterken kolları tam kilitleme, dönüşte 2 sn kontrollü gel ve göğüste esneme hisset. Kg kısmına makinedeki ağırlığı yaz." },
       { id: "dips", name: "Dips (paralel bar)", sets: 3, lo: 8, hi: 12, rest: 90, tip: "Gövde hafif öne eğik, dirsekler geriye. Omuzlar dirsek hizasına kadar insin, fazlası değil. 12'yi geçersen bele ağırlık tak, çıkmazsa asistli makinede yap. Kg kısmına ek ağırlığı yaz." },
       { id: "cable_row", name: "Oturarak Kablo Row", sets: 3, lo: 10, hi: 12, rest: 90, tip: "Göğüs dik, kolu karına çek, kürek kemiklerini birleştir." },
       { id: "rear_delt", name: "Reverse Pec Deck / Face Pull", sets: 3, lo: 12, hi: 15, rest: 60, tip: "Arka omuz için. Hafif kilo, kontrollü." },
@@ -269,6 +269,7 @@ const META = {
   calf_seated:  { en: "seated calf raise form", p: ["calves"], s: [] },
   hanging_leg:  { en: "hanging leg raise form", p: ["abs"], s: ["forearms"] },
   cable_fly:    { en: "cable chest fly proper form", p: ["chest"], s: ["delts"] },
+  machine_press:{ en: "seated machine chest press proper form", p: ["chest"], s: ["delts", "triceps"] },
   dips:         { en: "chest dips proper form", p: ["chest", "triceps"], s: ["delts"] },
   hip_thrust:   { en: "barbell hip thrust proper form", p: ["glutes"], s: ["hamstrings", "quads"] }
 };

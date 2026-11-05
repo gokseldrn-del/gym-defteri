@@ -208,6 +208,9 @@ const FIG = (() => {
     hip_thrust: { hi: ["glute", "th"], eq: [F, { t: "rect", x: 36, y: 92, w: 34, h: 9 }, { t: "line", a: [53, 101], b: [53, 130], w: 4, c: "soft" }, { t: "plate", at: "H:2,-11", r: 10, front: true }],
       A: { hip: [96, 116], torso: -135, hand: [98, 106], hb: 1, ankle: [128, 129], kb: -1, head: 0 },
       B: { hip: [104, 90], torso: 178, hand: [106, 80], hb: 1, ankle: [130, 129], kb: -1, head: -20 } },
+    machine_press: { hi: ["torso", "ua", "delt"], eq: [F, { t: "rect", x: 78, y: 98, w: 32, h: 6 }, { t: "line", a: [92, 104], b: [92, 130], w: 4, c: "soft" }, { t: "line", a: [80, 98], b: [86, 46], w: 7 }, { t: "line", a: "W:0,-7", b: "W:0,7", w: 5, front: true }],
+      A: { hip: [96, 94], torso: -96, hand: [112, 62], hb: 1, ankle: [128, 129], kb: -1 },
+      B: { hip: [96, 94], torso: -96, hand: [140, 60], hb: 1, ankle: [128, 129], kb: -1 } },
     hanging_leg: { hi: ["torso", "th"], eq: [{ t: "line", a: [60, 12], b: [150, 12], w: 4 }],
       A: { hip: [100, 86], torso: -90, ua: -90, fa: -90, th: 92, sh: 90, ft: 10 },
       B: { hip: [100, 86], torso: -90, ua: -90, fa: -90, th: -4, sh: 70, ft: 0 } }
