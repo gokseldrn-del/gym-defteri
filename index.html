@@ -223,8 +223,8 @@ const PROGRAM = {
       { id: "cable_row", name: "Oturarak Kablo Row", sets: 3, lo: 10, hi: 12, rest: 90, tip: "Göğüs dik, kolu karına çek, kürek kemiklerini birleştir." },
       { id: "rear_delt", name: "Reverse Pec Deck / Face Pull", sets: 3, lo: 12, hi: 15, rest: 60, tip: "Arka omuz için. Hafif kilo, kontrollü." },
       { id: "db_curl", name: "Dumbbell Curl", sets: 3, lo: 8, hi: 12, rest: 60, tip: "Dirsekler gövdenin yanında sabit, savurma yok. Yukarı çıkarken avuç içini hafif dışa çevir ve tepede 1 sn sık, iniş 2 sn. Kg kısmına tek dumbbell'ın kilosunu yaz." },
-      { id: "incline_curl", name: "Incline Dumbbell Curl", sets: 3, lo: 10, hi: 12, rest: 0, tip: "Triceps extension ile süperset. Dirsek geride sabit." },
-      { id: "oh_tri", name: "Kablo Overhead Triceps Ext.", sets: 3, lo: 10, hi: 12, rest: 60, tip: "Kablo arkada, dirsekler yukarıda sabit, tam aç." }
+      { id: "rope_curl", name: "Kablo Rope Curl", sets: 3, lo: 10, hi: 12, rest: 0, tip: "Alt makaraya rope tak. Dirsekler gövdenin yanında sabit, rope'u çenene doğru çek; tepede rope uçlarını hafif ayır ve 1 sn sık. Bitince dinlenmeden V-bar pushdown'a geç." },
+      { id: "vbar_pushdown", name: "V-Bar Triceps Pushdown", sets: 3, lo: 10, hi: 12, rest: 60, tip: "Üst makaraya üçgen (V) aparatı tak. Dirsekler gövdeye yapışık ve sabit, aparatı uyluklara kadar it ve altta 1 sn sık. Yukarı dönüşte dirsekler öne kaymasın. Süperset bitince 60 sn dinlen." }
     ] },
   lowerB: { name: "Alt Vücut B", short: "Alt B", focus: "Kalça zinciri ve tek bacak",
     ex: [
@@ -273,6 +273,8 @@ const META = {
   cable_fly:    { en: "cable chest fly proper form", p: ["chest"], s: ["delts"] },
   machine_press:{ en: "seated machine chest press proper form", p: ["chest"], s: ["delts", "triceps"] },
   db_curl:      { en: "standing dumbbell curl proper form", p: ["biceps"], s: ["forearms"] },
+  rope_curl:    { en: "cable rope bicep curl proper form", p: ["biceps"], s: ["forearms"] },
+  vbar_pushdown:{ en: "v bar tricep pushdown proper form", p: ["triceps"], s: [] },
   dips:         { en: "chest dips proper form", p: ["chest", "triceps"], s: ["delts"] },
   hip_thrust:   { en: "barbell hip thrust proper form", p: ["glutes"], s: ["hamstrings", "quads"] }
 };
