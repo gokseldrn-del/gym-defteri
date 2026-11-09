@@ -169,6 +169,19 @@ th { font-size: 12px; color: var(--muted); font-weight: 700; }
 .q { margin: 0; font-weight: 800; font-size: 15px; }
 .tips { margin: 0; padding-left: 18px; display: grid; gap: 4px; font-size: 13.5px; color: var(--muted); }
 .card.extra .ex-idx { background: var(--warn-soft); color: var(--warn); }
+.week-block { display: grid; gap: 10px; }
+.wk-head h3 { font-size: 19px; }
+.wk-head .lbl { font-size: 13px; }
+.kpis4 { grid-template-columns: repeat(4, 1fr); }
+.kpis4 .big { font-size: 19px; }
+.up { color: var(--good); font-size: 14px; } .down { color: var(--warn); font-size: 14px; }
+.sess { gap: 8px; }
+.sess-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.sess-list { display: grid; gap: 2px; }
+.sess-row { display: grid; grid-template-columns: 1fr auto; grid-template-areas: "n t" "s s"; gap: 0 8px; padding: 8px 0; border-top: 1px solid var(--line); }
+.sess-name { grid-area: n; font-weight: 800; font-size: 14px; }
+.sess-sets { grid-area: s; font-size: 13px; color: var(--muted); font-weight: 700; }
+.sess-row > div:last-child { grid-area: t; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
 </head>
@@ -238,7 +251,7 @@ const PROGRAM = {
     ] }
 };
 const ORDER = ["upperA", "lowerA", "upperB", "lowerB"];
-const TAB_EXTRA = [{ key: "olcum", short: "Ölçüm" }, { key: "kurallar", short: "Kurallar" }];
+const TAB_EXTRA = [{ key: "gecmis", short: "Geçmiş" }, { key: "olcum", short: "Ölçüm" }, { key: "kurallar", short: "Kurallar" }];
 const PROFILE = { height: 180, startWeight: 74, startDate: "2026-11-01" };
 
 /* hangi kas: p = ana, s = yardımcı; en = video araması için */
@@ -545,6 +558,83 @@ function renderMeas() {
   </div>`;
 }
 
+/* ---------- geçmiş: program haftalarına göre ---------- */
+const AYLAR = ["Ocak", "Şubat", "Mart", "Nisan", "Mayıs", "Haziran", "Temmuz", "Ağustos", "Eylül", "Ekim", "Kasım", "Aralık"];
+const GUNLER = ["Pazar", "Pazartesi", "Salı", "Çarşamba", "Perşembe", "Cuma", "Cumartesi"];
+const dUTC = s => { const [y, m, d] = s.split("-").map(Number); return Date.UTC(y, m - 1, d); };
+const isoOf = ms => new Date(ms).toISOString().slice(0, 10);
+function weekNoOf(date) { return Math.floor((dUTC(date) - dUTC(PROFILE.startDate)) / 864e5 / 7) + 1; }
+function weekRange(n) {
+  const a = dUTC(PROFILE.startDate) + (n - 1) * 7 * 864e5, b = a + 6 * 864e5;
+  const A = new Date(a), B = new Date(b);
+  return A.getUTCMonth() === B.getUTCMonth() ? `${A.getUTCDate()}–${B.getUTCDate()} ${AYLAR[B.getUTCMonth()]}` : `${A.getUTCDate()} ${AYLAR[A.getUTCMonth()]} – ${B.getUTCDate()} ${AYLAR[B.getUTCMonth()]}`;
+}
+const fmtKg = v => (v === "" || v == null) ? "—" : String(v).replace(".", ",");
+function allExercises() { const m = {}; ORDER.forEach(k => PROGRAM[k].ex.forEach((e, i) => { m[e.id] = { ...e, dayKey: k, order: i }; })); return m; }
+function setsTxt(sets) { return sets.filter(x => x.reps !== "" && x.reps != null).map(x => `${fmtKg(x.kg)}×${x.reps}`).join(" · "); }
+function trendChip(log) {
+  const prev = logs.filter(l => l.exId === log.exId && l.date < log.date && l.sets && l.sets.length).sort((a, b) => b.date.localeCompare(a.date))[0];
+  if (!prev) return `<span class="chip plain">ilk kayıt</span>`;
+  const a = sessionScore(prev.sets), b = sessionScore(log.sets);
+  const d = Math.round((b.v - a.v) * 10) / 10;
+  if (Math.abs(d) < 0.5) {
+    const reps = ss => ss.filter(x => Number(x.reps) > 0).reduce((t, x) => t + Number(x.reps), 0);
+    const dr = reps(log.sets) - reps(prev.sets);
+    if (dr > 0) return `<span class="chip good">↑ +${dr} tekrar</span>`;
+    if (dr < 0) return `<span class="chip warn">↓ ${dr} tekrar</span>`;
+    return `<span class="chip plain">= aynı</span>`;
+  }
+  return d > 0 ? `<span class="chip good">↑ gelişti</span>` : `<span class="chip warn">↓ düştü</span>`;
+}
+function renderHistory() {
+  const EXS = allExercises();
+  const list = sessionList();
+  const nowWeek = weekNoOf(todayStr());
+  if (!list.length) return `<section class="dayhead"><h2>Geçmiş</h2><p class="sub">Henüz kayıtlı antrenman yok. İlk setini kaydedince burada görünecek.</p></section>`;
+  const weeks = {};
+  list.forEach(sx => { (weeks[weekNoOf(sx.date)] = weeks[weekNoOf(sx.date)] || []).push(sx); });
+  const nums = Object.keys(weeks).map(Number).sort((a, b) => b - a);
+  const weekStats = n => {
+    const dates = new Set((weeks[n] || []).map(x => x.date));
+    const L = logs.filter(l => dates.has(l.date) && PROGRAM[l.dayKey]);
+    let sets = 0, vol = 0, cardio = 0, sauna = 0;
+    L.forEach(l => {
+      if (l.exId === "cardio") { if (l.done) cardio += Number(l.minutes) || 0; return; }
+      if (l.exId === "sauna") { if (l.done) sauna++; return; }
+      (l.sets || []).forEach(x => { if (Number(x.reps) > 0) { sets++; vol += (Number(x.kg) || 0) * Number(x.reps); } });
+    });
+    return { n: (weeks[n] || []).length, sets, vol: Math.round(vol), cardio, sauna };
+  };
+  const cmp = (a, b) => b == null ? "" : (a > b ? ` <span class="up">↑</span>` : a < b ? ` <span class="down">↓</span>` : "");
+  let html = `<section class="dayhead"><h2>Geçmiş</h2><p class="sub">Program 1 Kasım'da başladı. Şu an <b>${nowWeek}. haftadasın</b>. Her antrenmanda hangi hareketi kaç kiloyla yaptığın aşağıda; ok işaretleri bir önceki seferle karşılaştırma.</p>${statusLine()}</section>`;
+  nums.forEach(n => {
+    const st = weekStats(n), pv = (weeks[n - 1] && n < nowWeek) ? weekStats(n - 1) : null; // devam eden hafta karşılaştırılmaz
+    const label = n === nowWeek ? "Bu hafta" : n === nowWeek - 1 ? "Geçen hafta" : `${n}. hafta`;
+    html += `<section class="week-block">
+      <div class="wk-head"><h3>${n}. Hafta <span class="lbl">· ${label} · ${weekRange(n)}</span></h3></div>
+      <div class="kpis kpis4">
+        <div class="kpi"><span class="big">${st.n}/4</span><span class="lbl">antrenman</span></div>
+        <div class="kpi"><span class="big">${st.sets}${cmp(st.sets, pv && pv.sets)}</span><span class="lbl">set</span></div>
+        <div class="kpi"><span class="big">${(st.vol / 1000).toFixed(1).replace(".", ",")}t${cmp(st.vol, pv && pv.vol)}</span><span class="lbl">toplam yük</span></div>
+        <div class="kpi"><span class="big">${st.cardio}</span><span class="lbl">dk kardiyo${st.sauna ? ` · ${st.sauna} sauna` : ""}</span></div>
+      </div>`;
+    weeks[n].slice().sort((a, b) => b.date.localeCompare(a.date)).forEach(sx => {
+      const p = PROGRAM[sx.key];
+      const d = new Date(dUTC(sx.date));
+      const L = logs.filter(l => l.date === sx.date && l.exId !== "cardio" && l.exId !== "sauna" && l.sets && l.sets.some(x => x.reps !== "" && x.reps != null))
+        .sort((a, b) => ((EXS[a.exId] || {}).order ?? 99) - ((EXS[b.exId] || {}).order ?? 99));
+      const c = logs.find(l => l.date === sx.date && l.exId === "cardio" && l.done), sa = logs.find(l => l.date === sx.date && l.exId === "sauna" && l.done);
+      html += `<article class="card sess">
+        <div class="sess-head"><div><b>${progNo(sx.key)}. Gün · ${p.name}</b><div class="lbl">${GUNLER[d.getUTCDay()]}, ${d.getUTCDate()} ${AYLAR[d.getUTCMonth()]}</div></div><span class="chip plain">${L.length} hareket</span></div>
+        <div class="sess-list">${L.map(l => `<div class="sess-row"><div class="sess-name">${esc((EXS[l.exId] || {}).name || l.exName || l.exId)}</div><div class="sess-sets num">${esc(setsTxt(l.sets))}</div><div>${trendChip(l)}</div></div>`).join("")}</div>
+        ${c || sa ? `<div class="lbl">${c ? `♥ ${c.minutes} dk ${esc(c.typeName || "kardiyo")}` : ""}${c && sa ? " · " : ""}${sa ? `♨ ${sa.minutes} dk sauna` : ""}</div>` : ""}
+      </article>`;
+    });
+    html += `</section>`;
+  });
+  return html;
+}
+
 function renderRules() {
   return `<section class="dayhead"><h2>Kurallar</h2><p class="sub">Programın işe yaraması için tekrar tekrar dönülecek sayfa.</p></section>
   <div class="note"><h3>Çift progresyon</h3><ul>
@@ -582,6 +672,7 @@ function render() {
   v.style.display = "grid"; v.style.gap = "12px";
   if (needLogin) { v.innerHTML = loginCard(); renderedView = "login"; return; }
   if (PROGRAM[current]) v.innerHTML = renderDay(current);
+  else if (current === "gecmis") v.innerHTML = renderHistory();
   else if (current === "olcum") v.innerHTML = renderMeas();
   else v.innerHTML = renderRules();
   Object.keys(drafts).forEach(id => { const el = document.getElementById(id); if (el) el.value = drafts[id]; });
