@@ -220,6 +220,7 @@ const FIG = (() => {
   EX.cable_crunch.A.ua = -40; EX.cable_crunch.A.fa = -150;
   EX.cable_crunch.B.ua = 20; EX.cable_crunch.B.fa = -80;
   EX.bench = EX.db_bench;
+  EX.pec_fly = { hi: ["torso", "delt"], eq: [F, { t: "rect", x: 86, y: 34, w: 28, h: 62, r: 8, c: "soft" }, { t: "line", a: "W:0,-8", b: "W:0,8", w: 5, front: true }, { t: "line", a: "W2:0,-8", b: "W2:0,8", w: 5, front: true }], A: EX.cable_fly.A, B: EX.cable_fly.B };
   EX.rope_curl = { hi: ["ua"], eq: [F, { t: "rect", x: 128, y: 120, w: 10, h: 10 }, { t: "cable", from: [133, 120], to: "W", front: true }], A: EX.ez_curl.A, B: EX.ez_curl.B };
   EX.vbar_pushdown = { hi: ["ua"], eq: [F, { t: "cable", from: [140, 6], to: "W", front: true }, { t: "line", a: "W:-4,4", b: "W:4,4", w: 3, front: true }], A: EX.pushdown.A, B: EX.pushdown.B };
   EX.db_curl = { hi: ["ua"], eq: [F, { t: "db", at: "W", front: true }], A: EX.ez_curl.A, B: EX.ez_curl.B };
