@@ -173,6 +173,7 @@ th { font-size: 12px; color: var(--muted); font-weight: 700; }
 .wk-head h3 { font-size: 19px; }
 .wk-head .lbl { font-size: 13px; }
 .kpis4 { grid-template-columns: repeat(4, 1fr); }
+.wk-chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .kpis4 .big { font-size: 19px; }
 .up { color: var(--good); font-size: 14px; } .down { color: var(--warn); font-size: 14px; }
 .sess { gap: 8px; }
@@ -384,20 +385,20 @@ function sessionList() {
     .sort((x, y) => x.date.localeCompare(y.date));
 }
 function planToday() {
+  // Program haftası (1 Kasım Pazar'dan itibaren 7 günlük bloklar). Her yeni hafta 1. günden başlar.
   const list = sessionList(), today = todayStr();
+  const wk = weekNoOf(today);
+  const thisWeek = list.filter(x => weekNoOf(x.date) === wk);
+  const done = new Set(thisWeek.map(x => x.key));
   const t = list.find(x => x.date === today);
-  const past = list.filter(x => x.date < today);
-  const key = t ? t.key : (past.length ? ORDER[(ORDER.indexOf(past[past.length - 1].key) + 1) % ORDER.length] : ORDER[0]);
-  const idx = ORDER.indexOf(key);
-  const done = new Set();
-  if (idx === 0) { if (t) done.add(key); }
-  else {
-    const starts = list.filter(x => x.key === ORDER[0] && x.date <= today);
-    const d0 = starts.length ? starts[starts.length - 1].date : "";
-    list.filter(x => x.date >= d0 && x.date <= today).forEach(x => { if (ORDER.indexOf(x.key) <= idx) done.add(x.key); });
-    if (!t) done.delete(key);
+  let key = t ? t.key : null;
+  if (!key) {
+    const last = thisWeek.filter(x => x.date < today).slice(-1)[0];
+    const startIdx = last ? (ORDER.indexOf(last.key) + 1) % ORDER.length : 0;
+    for (let i = 0; i < ORDER.length; i++) { const k = ORDER[(startIdx + i) % ORDER.length]; if (!done.has(k)) { key = k; break; } }
+    if (!key) key = ORDER[startIdx];
   }
-  return { key, n: idx + 1, done, doneToday: !!t };
+  return { key, n: ORDER.indexOf(key) + 1, done, doneToday: !!t, week: wk };
 }
 const progNo = key => ORDER.indexOf(key) + 1;
 
@@ -409,11 +410,11 @@ function lsSet(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch
 function renderWeek() {
   const pl = planToday();
   document.getElementById("week").innerHTML = `
-    <div class="cycle-head"><span>Bu hafta</span><b class="num">${pl.done.size}/4 tamam</b></div>
+    <div class="cycle-head"><span>${pl.week}. hafta · ${weekRange(pl.week)}</span><b class="num">${pl.done.size >= 4 ? "Hafta tamam ✓" : pl.done.size + "/4 yapıldı"}</b></div>
     <div class="cycle">${ORDER.map((k, i) => {
       const isDone = pl.done.has(k), isNow = k === pl.key;
       return `<button type="button" class="wd ${isNow ? "today" : ""} ${isDone ? "done" : ""}" data-tab="${k}">
-        <span>${i + 1}. gün</span><b>${PROGRAM[k].short}</b><i>${isDone ? "✓ yapıldı" : (isNow ? "sıradaki" : "")}</i></button>`;
+        <span>${i + 1}. gün</span><b>${PROGRAM[k].short}</b><i>${isDone ? "✓ yapıldı" : (isNow ? "sıradaki" : "bekliyor")}</i></button>`;
     }).join("")}</div>`;
 }
 function renderTabs() {
@@ -594,7 +595,7 @@ function renderHistory() {
   if (!list.length) return `<section class="dayhead"><h2>Geçmiş</h2><p class="sub">Henüz kayıtlı antrenman yok. İlk setini kaydedince burada görünecek.</p></section>`;
   const weeks = {};
   list.forEach(sx => { (weeks[weekNoOf(sx.date)] = weeks[weekNoOf(sx.date)] || []).push(sx); });
-  const nums = Object.keys(weeks).map(Number).sort((a, b) => b - a);
+  const nums = []; for (let n = nowWeek; n >= 1; n--) nums.push(n);
   const weekStats = n => {
     const dates = new Set((weeks[n] || []).map(x => x.date));
     const L = logs.filter(l => dates.has(l.date) && PROGRAM[l.dayKey]);
@@ -618,8 +619,14 @@ function renderHistory() {
         <div class="kpi"><span class="big">${st.sets}${cmp(st.sets, pv && pv.sets)}</span><span class="lbl">set</span></div>
         <div class="kpi"><span class="big">${(st.vol / 1000).toFixed(1).replace(".", ",")}t${cmp(st.vol, pv && pv.vol)}</span><span class="lbl">toplam yük</span></div>
         <div class="kpi"><span class="big">${st.cardio}</span><span class="lbl">dk kardiyo${st.sauna ? ` · ${st.sauna} sauna` : ""}</span></div>
-      </div>`;
-    weeks[n].slice().sort((a, b) => b.date.localeCompare(a.date)).forEach(sx => {
+      </div>
+      <div class="wk-chips">${ORDER.map((k, i) => {
+        const did = (weeks[n] || []).some(x => x.key === k);
+        const cls = did ? "good" : (n < nowWeek ? "warn" : "plain");
+        const txt = did ? "✓ yapıldı" : (n < nowWeek ? "✗ yapılmadı" : "bekliyor");
+        return `<span class="chip ${cls}">${i + 1}. ${PROGRAM[k].short} · ${txt}</span>`;
+      }).join("")}</div>`;
+    (weeks[n] || []).slice().sort((a, b) => b.date.localeCompare(a.date)).forEach(sx => {
       const p = PROGRAM[sx.key];
       const d = new Date(dUTC(sx.date));
       const L = logs.filter(l => l.date === sx.date && l.exId !== "cardio" && l.exId !== "sauna" && l.sets && l.sets.some(x => x.reps !== "" && x.reps != null))
