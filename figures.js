@@ -220,6 +220,10 @@ const FIG = (() => {
   EX.cable_crunch.A.ua = -40; EX.cable_crunch.A.fa = -150;
   EX.cable_crunch.B.ua = 20; EX.cable_crunch.B.fa = -80;
   EX.bench = EX.db_bench;
+  EX.incline_smith = { hi: ["torso", "ua", "delt"], eq: [F, { t: "line", a: [118, 104], b: [66, 74], w: 7 }, { t: "line", a: [100, 106], b: [100, 130], w: 4, c: "soft" }, { t: "line", a: [84, 4], b: [84, 130], w: 3, c: "soft" }, { t: "plate", at: "W", r: 9, front: true }], A: EX.incline_db.A, B: EX.incline_db.B };
+  EX.smith_split = { hi: ["th", "glute"], eq: [F, { t: "rect", x: 34, y: 100, w: 30, h: 8 }, { t: "line", a: [49, 108], b: [49, 130], w: 4, c: "soft" }, { t: "line", a: [112, 4], b: [112, 130], w: 3, c: "soft" }, { t: "plate", at: "S:-6,-3", r: 10 }],
+    A: { ...EX.bss.A, hand: [104, 44] }, B: { ...EX.bss.B, hand: [100, 62] } };
+  EX.cable_lateral = { hi: ["delt"], eq: [F, { t: "cable", from: [150, 126], to: "W", front: true }], A: { ...EX.lateral.A, hand2: [116, 88] }, B: { ...EX.lateral.B, hand2: [116, 88] } };
   EX.pec_fly = { hi: ["torso", "delt"], eq: [F, { t: "rect", x: 86, y: 34, w: 28, h: 62, r: 8, c: "soft" }, { t: "line", a: "W:0,-8", b: "W:0,8", w: 5, front: true }, { t: "line", a: "W2:0,-8", b: "W2:0,8", w: 5, front: true }], A: EX.cable_fly.A, B: EX.cable_fly.B };
   EX.rope_curl = { hi: ["ua"], eq: [F, { t: "rect", x: 128, y: 120, w: 10, h: 10 }, { t: "cable", from: [133, 120], to: "W", front: true }], A: EX.ez_curl.A, B: EX.ez_curl.B };
   EX.vbar_pushdown = { hi: ["ua"], eq: [F, { t: "cable", from: [140, 6], to: "W", front: true }, { t: "line", a: "W:-4,4", b: "W:4,4", w: 3, front: true }], A: EX.pushdown.A, B: EX.pushdown.B };
