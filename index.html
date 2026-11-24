@@ -253,6 +253,20 @@ const PROGRAM = {
     ] }
 };
 const ORDER = ["upperA", "lowerA", "upperB", "lowerB"];
+/* Tek seferlik gün değişiklikleri (tarih → gün). Sadece o tarihte, o günün sekmesinde görünür. */
+const DATE_OVERRIDES = {
+  "2026-11-24": { day: "lowerA", title: "Bugün özel: kısaltılmış bacak + biceps", ex: [
+    { id: "squat", name: "Barbell Back Squat", sets: 3, lo: 6, hi: 8, rest: 180, tip: "Bugün 3 set. En az paralel derinlik, dizler ayak ucu yönünde, göğüs dik." },
+    { id: "rdl", name: "Romanian Deadlift", sets: 3, lo: 8, hi: 10, rest: 150, tip: "Kalçayı geriye it, bel düz. Tutuşun curl'lerden önce yorulmasın diye gerekirse kayış (strap) kullan." },
+    { id: "leg_curl", name: "Yatarak Leg Curl", sets: 3, lo: 10, hi: 12, rest: 90, tip: "Kalça bench'te sabit, iniş yavaş." },
+    { id: "ez_curl", name: "EZ Bar Curl", sets: 4, lo: 8, hi: 10, rest: 90, tip: "Biceps bloğunun ağır hareketi. Dirsekler gövdenin yanında, savurma yok, iniş 2 sn." },
+    { id: "incline_curl", name: "Incline Dumbbell Curl", sets: 3, lo: 10, hi: 12, rest: 60, tip: "Bench 45°, kollar gövdenin gerisinde sarkık başlasın; alttaki esnemeyi hisset, tepede sık." },
+    { id: "hammer_curl", name: "Hammer Curl", sets: 3, lo: 10, hi: 12, rest: 60, tip: "Avuç içleri birbirine bakar. Biceps'in dış kısmı ve ön kol çalışır, kolu kalınlaştırır." },
+    { id: "rope_curl", name: "Kablo Rope Curl (son set drop set)", sets: 3, lo: 12, hi: 15, rest: 60, tip: "Son sette tükenince kiloyu 2 kademe düşür, tükenene kadar devam et, bir kez daha düşür ve bitir." }
+  ] }
+};
+function dayOverride(key) { const o = DATE_OVERRIDES[todayStr()]; return o && o.day === key ? o : null; }
+function dayExercises(key) { const o = dayOverride(key); return o ? o.ex : PROGRAM[key].ex; }
 const TAB_EXTRA = [{ key: "gecmis", short: "Geçmiş" }, { key: "olcum", short: "Ölçüm" }, { key: "kurallar", short: "Kurallar" }];
 const PROFILE = { height: 180, startWeight: 74, startDate: "2026-11-01" };
 
@@ -294,6 +308,7 @@ const META = {
   incline_smith:{ en: "incline smith machine press form", p: ["chest"], s: ["delts", "triceps"] },
   cable_lateral:{ en: "single arm cable lateral raise form", p: ["delts"], s: [] },
   smith_split:  { en: "smith machine bulgarian split squat form", p: ["quads", "glutes"], s: ["hamstrings"] },
+  hammer_curl:  { en: "dumbbell hammer curl proper form", p: ["biceps", "forearms"], s: [] },
   dips:         { en: "chest dips proper form", p: ["chest", "triceps"], s: ["delts"] },
   hip_thrust:   { en: "barbell hip thrust proper form", p: ["glutes"], s: ["hamstrings", "quads"] }
 };
@@ -493,7 +508,8 @@ function statusLine() {
 }
 
 function renderDay(key) {
-  const p = PROGRAM[key];
+  const p0 = PROGRAM[key], ov = dayOverride(key);
+  const p = { ...p0, ex: dayExercises(key) };
   const today = todayStr();
   const doneCount = p.ex.filter(e => logs.some(l => l.exId === e.id && l.date === today)).length;
   const isToday = planToday().key === key;
@@ -505,7 +521,7 @@ function renderDay(key) {
   const sessions = new Set(logs.filter(l => l.dayKey === key).map(l => l.date)).size;
   return `<section class="dayhead">
       <h2>${progNo(key)}. Gün · ${p.name}</h2>
-      <p class="sub">${p.focus}. ${isToday ? "Bugün sıradaki antrenmanın bu." : ""}</p>
+      <p class="sub">${ov ? `<b>${esc(ov.title)}</b>` : `${p.focus}. ${isToday ? "Bugün sıradaki antrenmanın bu." : ""}`}</p>
       ${statusLine()}
     </section>
     <div class="hero">
@@ -576,7 +592,7 @@ function weekRange(n) {
   return A.getUTCMonth() === B.getUTCMonth() ? `${A.getUTCDate()}–${B.getUTCDate()} ${AYLAR[B.getUTCMonth()]}` : `${A.getUTCDate()} ${AYLAR[A.getUTCMonth()]} – ${B.getUTCDate()} ${AYLAR[B.getUTCMonth()]}`;
 }
 const fmtKg = v => (v === "" || v == null) ? "—" : String(v).replace(".", ",");
-function allExercises() { const m = {}; ORDER.forEach(k => PROGRAM[k].ex.forEach((e, i) => { m[e.id] = { ...e, dayKey: k, order: i }; })); return m; }
+function allExercises() { const m = {}; Object.values(DATE_OVERRIDES).forEach(o => o.ex.forEach((e, i) => { m[e.id] = m[e.id] || { ...e, dayKey: o.day, order: i }; })); ORDER.forEach(k => PROGRAM[k].ex.forEach((e, i) => { m[e.id] = { ...e, dayKey: k, order: i }; })); return m; }
 function setsTxt(sets) { return sets.filter(x => x.reps !== "" && x.reps != null).map(x => `${fmtKg(x.kg)}×${x.reps}`).join(" · "); }
 function trendChip(log) {
   const prev = logs.filter(l => l.exId === log.exId && l.date < log.date && l.sets && l.sets.length).sort((a, b) => b.date.localeCompare(a.date))[0];
@@ -701,7 +717,7 @@ function render() {
 
 /* ---------- save ---------- */
 async function saveEx(exId, dayKey) {
-  const ex = PROGRAM[dayKey].ex.find(e => e.id === exId);
+  const ex = dayExercises(dayKey).find(e => e.id === exId);
   const sets = [];
   for (let s = 0; s < ex.sets; s++) {
     const kg = document.getElementById(`kg-${exId}-${s}`).value.trim().replace(",", ".");

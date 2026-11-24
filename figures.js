@@ -220,6 +220,7 @@ const FIG = (() => {
   EX.cable_crunch.A.ua = -40; EX.cable_crunch.A.fa = -150;
   EX.cable_crunch.B.ua = 20; EX.cable_crunch.B.fa = -80;
   EX.bench = EX.db_bench;
+  EX.hammer_curl = { hi: ["ua", "fa"], eq: [F, { t: "line", a: "W:0,-6", b: "W:0,6", w: 5, front: true }], A: EX.ez_curl.A, B: EX.ez_curl.B };
   EX.incline_smith = { hi: ["torso", "ua", "delt"], eq: [F, { t: "line", a: [118, 104], b: [66, 74], w: 7 }, { t: "line", a: [100, 106], b: [100, 130], w: 4, c: "soft" }, { t: "line", a: [84, 4], b: [84, 130], w: 3, c: "soft" }, { t: "plate", at: "W", r: 9, front: true }], A: EX.incline_db.A, B: EX.incline_db.B };
   EX.smith_split = { hi: ["th", "glute"], eq: [F, { t: "rect", x: 34, y: 100, w: 30, h: 8 }, { t: "line", a: [49, 108], b: [49, 130], w: 4, c: "soft" }, { t: "line", a: [112, 4], b: [112, 130], w: 3, c: "soft" }, { t: "plate", at: "S:-6,-3", r: 10 }],
     A: { ...EX.bss.A, hand: [104, 44] }, B: { ...EX.bss.B, hand: [100, 62] } };
